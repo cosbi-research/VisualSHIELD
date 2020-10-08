@@ -1,0 +1,28 @@
+Package: VisualSHIELD
+Title: Shiny module to seamlessly analyze Opal (https://www.obiba.org/pages/products/opal/) and dbNP (https://www.dbnp.org/) remote data through the privacy-aware DataSHIELD (https://www.datashield.ac.uk/) analysis package 
+Version: 1.0
+Authors@R: 
+    person(given = "Danilo",
+           family = "Tomasoni",
+           role = c("aut", "cre"),
+           email = "tomasoni@cosbi.eu",
+           comment = c(ORCID = "0000-0002-8427-4230"))
+Description: This package contains a shiny module, that means that it can be used in another custom shiny app. The module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. The module builds a user-frendly web-UI to analyze remote data hosted on opal servers. It allows also to port dbNP data to Opal, in such a way that also dbNP data can be used in the analysis.
+License: MIT + file LICENSE
+Depends: R (>= 3.6.0)
+Imports: 
+    shiny (>= 1.5.0),
+    shinyjs (>= 2.0.0),
+    shinydashboard (>= 0.7.1),
+    opalr (>= 1.4.1),
+    DSI (>= 1.1.0),
+    dsBaseClient (>= 6.0.1),
+    ggplot2 (>= 3.3.0),
+    ggpubr (>= 0.4.0),
+    cowplot (>= 1.1.0)
+Suggests:
+    PhenotypeDatabaseRClient
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
