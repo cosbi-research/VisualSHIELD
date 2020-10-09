@@ -1154,7 +1154,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             condition = paste0("input['", ns('analysis'), "'] == 'glm'"),
             
             shiny::selectInput(
-              "familyFunction",
+              ns("familyFunction"),
               label = "Output distribution",
               choices = list("Binomial (link=logistic)" = "binomial",
                              "Poisson (link=log)" = "poisson")
