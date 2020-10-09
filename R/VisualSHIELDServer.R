@@ -34,11 +34,12 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
 #  library(jsonlite)
 #  library(httr)
 #  library(PhenotypeDatabaseRClient)
-#  library(opalr)
-#  library(DSI)
-#  library(DSOpal)
-#  library(DSLite)
-#  library(dsBaseClient)
+  # I KNOW it should be avoided to use "library" in a package
+  # but otherwise the load button will fail getClass() couldn't find OpalDriver..
+  library(opalr)
+  library(DSI)
+  library(DSOpal)
+  library(dsBaseClient)
 #  library(DT)
   
 #  library(ggpubr)
