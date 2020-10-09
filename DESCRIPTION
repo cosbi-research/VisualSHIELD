@@ -8,7 +8,7 @@ Authors@R:
            email = "tomasoni@cosbi.eu",
            comment = c(ORCID = "0000-0002-8427-4230"))
 Description: This package contains a shiny module, that means that it can be used in another custom shiny app. The module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. The module builds a user-frendly web-UI to analyze remote data hosted on opal servers. It allows also to port dbNP data to Opal, in such a way that also dbNP data can be used in the analysis.
-License: MIT + file LICENSE
+License: BSD_3_clause + file LICENSE
 Depends: R (>= 3.6.0)
 Imports: 
     shiny (>= 1.5.0),

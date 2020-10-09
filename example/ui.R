@@ -2,9 +2,9 @@ library(shiny)
 
 library(opalr)
 library(DSI)
-library(DSOpal)
+#library(DSOpal)
 library(dsBaseClient)
-devtools::load_all()
+library(VisualSHIELD)
 
 shinyUI(
   fluidPage(
