@@ -17,7 +17,11 @@ Use it like this:
 }
 \details{
 library(shiny)
-library("VisualSHIELD")
+library(opalr)
+library(DSI)
+library(DSOpal)
+library(dsBaseClient)
+library(VisualSHIELD)
 
 shinyUI(
 fluidPage(VisualSHIELDUI("VisualSHIELD", h3("Demo VisualSHIELD app title")))
