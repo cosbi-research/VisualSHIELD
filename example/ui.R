@@ -1,4 +1,9 @@
 library(shiny)
+
+library(opalr)
+library(DSI)
+library(DSOpal)
+library(dsBaseClient)
 devtools::load_all()
 
 shinyUI(
