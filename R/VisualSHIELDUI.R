@@ -1,18 +1,5 @@
 #' Load main VisualSHIELD UI component
 #' this function generates the UI for the shiny module corresponding to this app.
-#' 
-#' Use it like this:
-#' 
-#' library(shiny)
-#' library(opalr)
-#' library(DSI)
-#' library(DSOpal)
-#' library(dsBaseClient)
-#' library(VisualSHIELD)
-#' 
-#' shinyUI(
-#'   fluidPage(VisualSHIELDUI("VisualSHIELD", h3("Demo VisualSHIELD app title")))
-#' )
 #'
 #' @param id The id of the module. It should match with the id param of the VisualSHIELDServer function
 #' @param title The title of the module (as a shiny UI object such as h4) in your custom app.

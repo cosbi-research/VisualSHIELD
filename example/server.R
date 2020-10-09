@@ -1,13 +1,18 @@
 
 shinyServer(function(input, output, session) {
   # login information, list of servers and user name
-  login <- list(username="tomasoni", email="tomasoni@cosbi.eu",
+  login <- reactive({
+    if( is.null(input$load) || !input$load )
+      return(NULL)
+    
+    isolate( 
+      list(username="tomasoni", email="tomasoni@cosbi.eu",
                 servers=list(
                   # server 1
                   list(
                           opal_server = list(id = "1",
                                              name = "DEMO",
-                                             url = "https://opal-demo.obiba.org",
+                                             url = input$custom_server,
                                              username = "administrator",
                                              password = "password",
                                              certificate = NULL,
@@ -16,9 +21,13 @@ shinyServer(function(input, output, session) {
                   )
                   #, ... server n
                 )
-              )
-
+              ) 
+      )
+    })
   
-  shieldServer <- VisualSHIELDServer("VisualSHIELD", servers=login)
-  shieldServer
+  VisualSHIELDServer("VisualSHIELD", servers=login)
+
+  output$server <- renderUI({
+    textInput("custom_server", label="Server to connect to:", value="", placeholder = "https://opal-demo.obiba.org")
+  })
 })

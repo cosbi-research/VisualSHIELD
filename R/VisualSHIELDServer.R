@@ -1,29 +1,6 @@
 #' Load main VisualSHIELD Server component
 #' this function generates the Server counterpart for the UI with the matching id parameter.
 #' 
-#' Use it, for instance, like this:
-#' 
-#' shinyServer(function(input, output, session) {
-#'   login <- list(username="tomasoni", email="tomasoni@cosbi.eu",
-#'                 servers=list(
-#'                 # server 1
-#'                 list(
-#'                     opal_server = list(id = "1",
-#'                                        name = "DEMO",
-#'                       url = "https://opal-demo.obiba.org",
-#'                       username = "administrator",
-#'                       password = "password",
-#'                       certificate = NULL,
-#'                       private_key = NULL),
-#'                  dashin_server = NULL # dbNP server whose studies will be migrated to the opal server defined above
-#'                 )
-#'                 #, ... server n
-#'                )
-#'              )
-#'   
-#'   VisualSHIELDServer("VisualSHIELD", servers=login)
-#' })
-#' 
 #' @param id The id of the corresponding VisualSHIELD UI.
 #' @param servers A R list with user information (name/email)and a list of opal/dbNP servers the user can connect to.
 #' @param LOG_FILE The path to the file where user activity will be logged
@@ -108,7 +85,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
           globalValues$dbnp.servers <- data.frame(id=character(0), server_name=character(0), url=character(0), user=character(0), password=character(0))
         }
       }
-      load.data.servers(servers)
+      shiny::observeEvent(servers(), {
+        load.data.servers(servers())
+      })
       # === END URL PARSING AND DATABASE CONNECTION
       # === on FLUSH
       # run This will run every time that shiny flushes the reactive system 
