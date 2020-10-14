@@ -22,27 +22,6 @@ VisualSHIELDServer(
 \item{glm_max_iterations}{The maximum number of iterations allowed for the federated analysis}
 }
 \description{
-Use it, for instance, like this:
-}
-\details{
-shinyServer(function(input, output, session) {
-login <- list(username="tomasoni", email="tomasoni@cosbi.eu",
-servers=list(
-# server 1
-list(
-opal_server = list(id = "1",
-name = "DEMO",
-url = "https://opal-demo.obiba.org",
-username = "administrator",
-password = "password",
-certificate = NULL,
-private_key = NULL),
-dashin_server = NULL # dbNP server whose studies will be migrated to the opal server defined above
-)
-#, ... server n
-)
-)
-
-VisualSHIELDServer("VisualSHIELD", servers=login)
-})
+Load main VisualSHIELD Server component
+this function generates the Server counterpart for the UI with the matching id parameter.
 }

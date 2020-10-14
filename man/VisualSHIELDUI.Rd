@@ -13,17 +13,6 @@ VisualSHIELDUI(id, title)
 \item{title}{The title of the module (as a shiny UI object such as h4) in your custom app.}
 }
 \description{
-Use it like this:
-}
-\details{
-library(shiny)
-library(opalr)
-library(DSI)
-library(DSOpal)
-library(dsBaseClient)
-library(VisualSHIELD)
-
-shinyUI(
-fluidPage(VisualSHIELDUI("VisualSHIELD", h3("Demo VisualSHIELD app title")))
-)
+Load main VisualSHIELD UI component
+this function generates the UI for the shiny module corresponding to this app.
 }
