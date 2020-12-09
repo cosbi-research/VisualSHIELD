@@ -16,3 +16,22 @@ VisualSHIELDUI(id, title)
 Load main VisualSHIELD UI component
 this function generates the UI for the shiny module corresponding to this app.
 }
+\examples{
+\dontrun{
+library(shiny)
+library(opalr)
+library(DSI)
+library(dsBaseClient)
+library(VisualSHIELD)
+
+shinyUI(
+ fluidPage(
+   fluidRow(column(10, uiOutput("server")),
+            column(2, actionButton("load", "Update"), 
+            tags$style(type='text/css', 
+        "#load { vertical-align: middle; margin-top: 25px;}"))),
+   fluidRow(VisualSHIELDUI("VisualSHIELD", h3("Demo VisualSHIELD app")))
+   )
+)
+}
+}

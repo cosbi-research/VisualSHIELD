@@ -45,7 +45,8 @@ library(VisualSHIELD)
 shinyUI(
   fluidPage(
     fluidRow(column(10, uiOutput("server")),
-             column(2, actionButton("load", "Update"), tags$style(type='text/css', "#load { vertical-align: middle; margin-top: 25px;}"))),
+             column(2, actionButton("load", "Update"), tags$style(type='text/css', 
+                        "#load { vertical-align: middle; margin-top: 25px;}"))),
     fluidRow(VisualSHIELDUI("VisualSHIELD", h3("Demo VisualSHIELD app")))
     )
 )
@@ -83,7 +84,9 @@ shinyServer(function(input, output, session) {
                                              password = "password",
                                              certificate = NULL,
                                              private_key = NULL),
-                          dashin_server = NULL # dbNP server whose studies will be migrated to the opal server defined above
+                          # dbNP server whose studies will be migrated 
+                          # to the opal server defined above
+                          dashin_server = NULL 
                   )
                   #, ... server n
                 )
@@ -94,7 +97,10 @@ shinyServer(function(input, output, session) {
   VisualSHIELDServer("VisualSHIELD", servers=login)
 
   output$server <- renderUI({
-    textInput("custom_server", label="Server to connect to:", value="", placeholder = "https://opal-demo.obiba.org")
+    textInput("custom_server", 
+              label="Server to connect to:", 
+              value="", 
+              placeholder = "https://opal-demo.obiba.org")
   })
 })
 ```

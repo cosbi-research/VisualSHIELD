@@ -6,6 +6,46 @@
 #' @param LOG_FILE The path to the file where user activity will be logged
 #' @param glm_max_iterations The maximum number of iterations allowed for the federated analysis
 #' @export
+#' @examples
+#' \dontrun{
+#' shinyServer(function(input, output, session) {
+#'  # login information, list of servers and user name
+#'  login <- reactive({
+#'    if( is.null(input$load) || !input$load )
+#'      return(NULL)
+#'
+#'    isolate(
+#'      list(username="tomasoni", email="tomasoni@cosbi.eu",
+#'                servers=list(
+#'                  # server 1
+#'                  list(
+#'                          opal_server = list(id = "1",
+#'                                             name = "DEMO",
+#'                                             url = input$custom_server,
+#'                                             username = "administrator",
+#'                                             password = "password",
+#'                                             certificate = NULL,
+#'                                             private_key = NULL),
+#'                          # dbNP server whose studies will be migrated 
+#'                          # to the opal server defined above
+#'                          dashin_server = NULL 
+#'                  )
+#'                  #, ... server n
+#'                )
+#'              )
+#'      )
+#'    })
+#'
+#'  VisualSHIELDServer("VisualSHIELD", servers=login)
+#'
+#'   output$server <- renderUI({
+#'     textInput("custom_server", 
+#'               label="Server to connect to:", value="", 
+#'               placeholder = "https://opal-demo.obiba.org")
+#'   })
+#' })
+#' }
+
 VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max_iterations=30){
   
 #  library(jsonlite)
