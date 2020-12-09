@@ -9,7 +9,7 @@ VisualSHIELD allows to create reactive visual web UIs to seamlessly analyze mult
 
 This repository contains the reference implementation for VisualSHIELD and XXXX two real-world examples described in the paper XXXX. You may freely use this work in your research and activities under the non-commercial [COSBI-SSLA license](https://www.cosbi.eu/research/prototypes/licence_terms).
 
-For more information on ongoing work in biomedical knowledge extraction you may want to visit the [COSBI knowledge extraction page](https://www.cosbi.eu/research/prototypes/biomedical_knowledge_extraction) or get in touch with the Cosbi Bioinformatics lab led by lombardo@cosbi.eu. We'll be happy to help!
+For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) or get in touch with the Cosbi Bioinformatics lab, led by lombardo@cosbi.eu. We'll be happy to help!
 
 ## Table of contents
 
