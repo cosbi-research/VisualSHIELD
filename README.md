@@ -8,24 +8,36 @@ This repository contains the reference implementation for VisualSHIELD. You may 
 
 For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) or get in touch with the Cosbi Bioinformatics lab, led by lombardo@cosbi.eu. We'll be happy to help!
 
-# Table of contents
+## Table of contents
 
-- [VisualSHIELD](#visualshield)
 - [Installation](#installation)
 - [Usage](#usage)
 
 
 # Installation
 
-from R console type
+PRE-requisites? 
+
+
+Finally, from R console type
 
 ```R
 install.packages('VisualSHIELD_1.0.tar.gz')
 ```
+
+For REVIEWERS, type:
+
+XXXXXXX
+
 # Usage
 
-VisualSHIELD is a shiny app module.
-A shiny app module is a self-contained UI with it's own logic that can be easily integrated in any other custom shiny app. 
+VisualSHIELD is a shiny app module. A shiny app module is a self-contained UI with it's own logic that can be easily integrated in any other custom shiny app. 
+
+The module offers pre-built UI and logic for:
+* analisis selection
+* tabular resutl presentation
+* ...
+* XXXX
 
 The analysis is performed through the privacy-aware [DataSHIELD](https://www.datashield.ac.uk/) analysis package, and allows to easily perform:
 * histograms
