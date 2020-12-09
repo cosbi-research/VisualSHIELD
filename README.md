@@ -16,7 +16,7 @@ For more information and guided hands-on tutorials on how everything can be syst
 
 # Installation
 
-PRE-requisites? 
+XXXX PRE-requisites prior to install.packages()? 
 
 
 Finally, from R console type
@@ -30,6 +30,12 @@ For REVIEWERS, type:
 XXXXXXX
 
 # Usage
+
+For a demo of what you can obtain out-of-box, after installation go to the [example](example) folder, at the R console type:
+
+```R
+shiny::runApp() 
+```
 
 VisualSHIELD is a shiny app module. A shiny app module is a self-contained UI with it's own logic that can be easily integrated in any other custom shiny app. 
 
@@ -48,20 +54,78 @@ The analysis is performed through the privacy-aware [DataSHIELD](https://www.dat
 
 VisualSHIELD module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. 
 
-## Demo
 
-To run the demo, after installation go to the [example](example) folder, run the R console and type in
+## Embed VisualSHIELD UI module in your Shiny App
+
+Embedding the UI in your custom shiny app is as simple as using VisualSHIELDUI in your page as any other shiny object. Below a simple
+example of a minimal custom shiny UI that embeds VisualSHIELDUI.
 
 ```R
-shiny::runApp() 
+library(shiny)
+library(opalr)
+#> Loading required package: httr
+library(DSI)
+#> Loading required package: progress
+#> Loading required package: R6
+library(dsBaseClient)
+library(VisualSHIELD)
+shinyUI(
+fluidPage(
+    fluidRow(column(10, uiOutput("server")),
+       column(2, actionButton("load", "Update"), tags$style(type='text/css',
+          "#load { vertical-align: middle; margin-top: 25px;}"))),
+    fluidRow(VisualSHIELDUI("VisualSHIELD", h3("Demo VisualSHIELD app")))
+    )
+)
 ```
 
-## Further instructions
+Edit your `id`, and `title` as you like, just note that the choosen `id` should be the same as the one passed to the server module.
 
-Look at the vignette for details on how to incorporate VisualSHIELD in your shiny app.
-After installing VisualSHIELD, from the R console run
+## Embed the Server module in your shiny app
+
+Each shiny module also has a server counterpart for the UI. The VisualSHIELDServer communicates with the parent custom app through
+the servers parameter, this means that we expect it to be a reactive block, returning a list (more on this below) or NULL.
+Here is an example on how to embed it in your custom shinyServer function
+
+```R
+shinyServer(function(input, output, session) {
+  # login information, list of servers and user name
+  login <- reactive({
+    if( is.null(input$load) || !input$load )
+      return(NULL)
+isolate(
+list(username="tomasoni", email="tomasoni@cosbi.eu",
+servers=list(
+# server 1
+list(
+opal_server = list(id = "1",
+name = "DEMO",
+url = input$custom_server,
+username = "administrator",
+password = "password",
+certificate = NULL,
+private_key = NULL),
+# dbNP server whose studies will be migrated
+# to the opal server defined above
+dashin_server = NULL
+)
+#, ... server n
+)
+)
+)
+})
+VisualSHIELDServer("VisualSHIELD", servers=login)
+output$server <- renderUI({
+textInput("custom_server",
+label="Server to connect to:",
+value="",
+placeholder = "https://opal-demo.obiba.org")
+})
+})
+```
+
+You may alwasy access these information from your preferred R coding environment with:
 
 ```R
 vignette('VisualSHIELD')
 ```
-or look at the [PDF version](doc/VisualSHIELD-vignette.pdf) 
