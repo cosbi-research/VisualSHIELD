@@ -36,6 +36,8 @@ The analysis is performed through the privacy-aware [DataSHIELD](https://www.dat
 
 VisualSHIELD module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. 
 
+## Demo
+
 To run the demo, after installation go to the [example](example) folder, run the R console and type in
 
 ```R
@@ -45,5 +47,5 @@ shiny::runApp()
 Look at the vignette for details on how to incorporate VisualSHIELD in your shiny app.
 
 ```R
-vignette('embed-in-custom-shiny-app')
+vignette('VisualSHIELD')
 ```
