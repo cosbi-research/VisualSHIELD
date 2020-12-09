@@ -44,7 +44,10 @@ To run the demo, after installation go to the [example](example) folder, run the
 shiny::runApp() 
 ```
 
+## Further instructions
+
 Look at the vignette for details on how to incorporate VisualSHIELD in your shiny app.
+After installing VisualSHIELD, from the R console run
 
 ```R
 vignette('VisualSHIELD')
