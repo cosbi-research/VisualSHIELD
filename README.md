@@ -28,11 +28,9 @@ Finally, from R console type
 install.packages('VisualSHIELD_1.0.tar.gz')
 ```
 
-For REVIEWERS, type:
-
-XXXXXXX
-
 # Usage
+
+Make sure to have a (network of) OPAL server along with your secure credentials to integrate in the following analyses. For the demo, it is provided a publicly accessible server.
 
 For a demo of what you can obtain out-of-box, after installation go to the [example](example) folder, at the R console type:
 
