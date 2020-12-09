@@ -2,9 +2,9 @@
 
 <img align="right" height="100" src="https://dashin.cosbi.eu/img/dash-in_logo.png">
 
-VisualSHIELD allows to create reactive visual web UIs to seamlessly analyze multiple remote datasets in parallel hosted on [Opal](https://www.obiba.org/pages/products/opal/) and optionally provides also a facility to load [dbNP](https://dashin.eu/interventionstudies/) data into Opal. The [DASH-IN interactive federated analysis system](https://dashin.cosbi.eu/) is a unifying visual federated analytical framework of observational and interventional studies powered by VisualSHIELD and contribuited to the [ENPADASI](https://www.dtls.nl/wp-content/uploads/2016/05/ENPADASI_Bouwman_250516_FAIR.pdf#page=7) project of 51 partners in 9 European countries.
+VisualSHIELD allows to create reactive visual web UIs to seamlessly analyze multiple remote datasets in parallel hosted on [Opal](https://www.obiba.org/pages/products/opal/) and **optionally** provides also a facility to load [dbNP](https://dashin.eu/interventionstudies/) data into Opal. The [DASH-IN interactive federated analysis system](https://dashin.cosbi.eu/) is a unifying visual federated analytical framework of observational and interventional studies powered by VisualSHIELD and contribuited to the [ENPADASI](https://www.dtls.nl/wp-content/uploads/2016/05/ENPADASI_Bouwman_250516_FAIR.pdf#page=7) project of 51 partners in 9 European countries.
 
-This repository contains the reference implementation for VisualSHIELD. You may freely use this work in your research and activities under the non-commercial [COSBI-SSLA license](https://www.cosbi.eu/research/prototypes/licence_terms).
+This repository contains the reference implementation for VisualSHIELD. VisualSHIELD is a shiny app module offering ready-to-use self-contained UI and logic to be easily integrated in your custom Shiny App. You may freely use this work in your research and activities under the non-commercial [COSBI-SSLA license](https://www.cosbi.eu/research/prototypes/licence_terms).
 
 For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) or get in touch with the Cosbi Bioinformatics lab, led by lombardo@cosbi.eu. We'll be happy to help!
 
@@ -12,8 +12,8 @@ For more information and guided hands-on tutorials on how everything can be syst
 
 - [Installation](#installation)
 - [Usage](#usage)
-  + Embed the VisualSHIELD UI in your Shiny App
-  + Embed the VisualSHIELD Server in your Shiny App
+  + [Embed the VisualSHIELD UI in your Shiny App](#embed-the-visualshield-server-module-in-your-shiny-app)
+  + [Embed the VisualSHIELD Server in your Shiny App](#embed-visualshield-ui-module-in-your-shiny-app)
 
 # Installation
 
@@ -38,9 +38,7 @@ For a demo of what you can obtain out-of-box, after installation go to the [exam
 shiny::runApp() 
 ```
 
-VisualSHIELD is a shiny app module. A shiny app module is a self-contained UI with it's own logic that can be easily integrated in any other custom shiny app. 
-
-The module offers pre-built UI and logic for:
+The VisualSHIELD module offers pre-built UI and logic for:
 * analisis selection
 * tabular resutl presentation
 * ...
