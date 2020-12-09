@@ -52,3 +52,4 @@ After installing VisualSHIELD, from the R console run
 ```R
 vignette('VisualSHIELD')
 ```
+or look at the [PDF version](doc/VisualSHIELD-vignette.pdf) 
