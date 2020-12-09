@@ -12,3 +12,24 @@ The analysis is performed through the privacy-aware [DataSHIELD](https://www.dat
 * generalized linear models (glm)
 
 VisualSHIELD module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. 
+
+# Installation
+
+from R console type
+
+```R
+install.packages('VisualSHIELD_1.0.tar.gz')
+```
+# Usage
+
+To run the demo, after installation go to the [example](example) folder, run the R console and type in
+
+```R
+shiny::runApp() 
+```
+
+Look at the vignette for details on how to incorporate VisualSHIELD in your shiny app.
+
+```R
+vignette('embed-in-custom-shiny-app')
+```
