@@ -93,38 +93,41 @@ shinyServer(function(input, output, session) {
   login <- reactive({
     if( is.null(input$load) || !input$load )
       return(NULL)
-isolate(
-list(username="tomasoni", email="tomasoni@cosbi.eu",
-servers=list(
-# server 1
-list(
-opal_server = list(id = "1",
-name = "DEMO",
-url = input$custom_server,
-username = "administrator",
-password = "password",
-certificate = NULL,
-private_key = NULL),
-# dbNP server whose studies will be migrated
-# to the opal server defined above
-dashin_server = NULL
-)
-#, ... server n
-)
-)
-)
+      
+  isolate(
+    list(username="tomasoni", email="tomasoni@cosbi.eu",
+      servers=list(
+        # server 1
+        list(
+            opal_server = list(id = "1",
+                               name = "DEMO",
+                               url = input$custom_server,
+                               username = "administrator",
+                               password = "password",
+                               certificate = NULL,
+                               private_key = NULL),
+            # dbNP server whose studies will be migrated
+            # to the opal server defined above
+            dashin_server = NULL
+        )
+        #, ... server n
+      )
+    )
+  )
 })
+
 VisualSHIELDServer("VisualSHIELD", servers=login)
+
 output$server <- renderUI({
-textInput("custom_server",
-label="Server to connect to:",
-value="",
-placeholder = "https://opal-demo.obiba.org")
-})
+  textInput("custom_server",
+            label="Server to connect to:",
+            value="",
+            placeholder = "https://opal-demo.obiba.org")
+  })
 })
 ```
 
-You may alwasy access these information from your preferred R coding environment with:
+You may always access these information from your preferred R coding environment with:
 
 ```R
 vignette('VisualSHIELD')
