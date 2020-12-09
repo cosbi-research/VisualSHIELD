@@ -8,12 +8,11 @@ This repository contains the reference implementation for VisualSHIELD and XXXX 
 
 For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) or get in touch with the Cosbi Bioinformatics lab, led by lombardo@cosbi.eu. We'll be happy to help!
 
-## Table of contents
+# Table of contents
 
+- [VisualSHIELD](#visualshield)
 - [Installation](#installation)
 - [Usage](#usage)
-  + [Real-world examples](#real-world-examples)
-- [What's next (making sense with Bio NLP)](#whats-next-or-how-to-make-sense-with-nlp)
 
 
 # Installation
