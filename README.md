@@ -12,7 +12,8 @@ For more information and guided hands-on tutorials on how everything can be syst
 
 - [Installation](#installation)
 - [Usage](#usage)
-
+  + Embed the VisualSHIELD UI in your Shiny App
+  + Embed the VisualSHIELD Server in your Shiny App
 
 # Installation
 
@@ -81,7 +82,7 @@ fluidPage(
 
 Edit your `id`, and `title` as you like, just note that the choosen `id` should be the same as the one passed to the server module.
 
-## Embed the Server module in your shiny app
+## Embed the VisualSHIELD Server module in your shiny app
 
 Each shiny module also has a server counterpart for the UI. The VisualSHIELDServer communicates with the parent custom app through
 the servers parameter, this means that we expect it to be a reactive block, returning a list (more on this below) or NULL.
