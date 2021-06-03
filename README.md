@@ -6,7 +6,7 @@ VisualSHIELD allows to create reactive visual web UIs to seamlessly analyze mult
 
 VisualSHIELD is a shiny app module offering ready-to-use self-contained UI and logic to be easily integrated in your custom Shiny App. See XXX SCREENSHOTS or XXX LIVE DEMO.
 
-This repository contains the reference implementation for VisualSHIELD. You may freely use this work in your research and activities under the non-commercial [COSBI-SSLA license](https://www.cosbi.eu/research/prototypes/licence_terms).
+This repository contains the reference implementation for VisualSHIELD. You may freely use this work in your research and activities under the BSD 3-Clause License (see LICENSE file).
 
 For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) or get in touch with the Cosbi Bioinformatics lab, led by lombardo@cosbi.eu. We'll be happy to help!
 
@@ -19,10 +19,20 @@ For more information and guided hands-on tutorials on how everything can be syst
 
 # Installation
 
-XXXX PRE-requisites prior to install.packages()? 
+First install all the dependencies.
 
+Many packages need curl. Under linux you may need to install the following curl development package
+ * in Debian, Ubuntu, etc: libcurl4-openssl-dev 
+ * in Fedora, CentOS, RHEL: libcurl-devel
+ * in Solaris: libcurl_dev 
 
-Finally, from R console type
+```R
+install.packages(c('shiny', 'shinyjs', 'shinydashboard', 'opalr', 'DSI', 'DSOpal', 'ggplot2', 'ggpubr', 'cowplot'))
+install.packages('dsBase', repos=c(getOption('repos'), 'https://cran.obiba.org'))
+install.packages('dsBaseClient', repos=c(getOption('repos'), 'https://cran.obiba.org'))
+```
+
+Then, to install VisualSHIELD just type from R console
 
 ```R
 install.packages('VisualSHIELD_1.0.tar.gz')
@@ -30,17 +40,11 @@ install.packages('VisualSHIELD_1.0.tar.gz')
 
 # Usage
 
-Make sure to have a (network of) OPAL server along with your secure credentials to integrate in the following analyses. For the demo, it is provided a publicly accessible server.
-
-For a demo of what you can obtain out-of-box, after installation go to the [example](example) folder, at the R console type:
-
-```R
-shiny::runApp() 
-```
+Make sure to have a (network of) OPAL server along with your secure credentials to integrate in the following analyses. For a demo, you can use https://opal-demo.obiba.org .
 
 The VisualSHIELD module offers pre-built UI and logic for:
 * analisis selection
-* tabular resutl presentation
+* tabular result presentation
 * ...
 * XXXX
 
@@ -53,6 +57,40 @@ The analysis is performed through the privacy-aware [DataSHIELD](https://www.dat
 
 VisualSHIELD module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. 
 
+To run the tutorial app go to the [example](example) folder and type
+
+```R
+> shiny::runApp()
+```
+
+An example output will be
+
+```R
+Loading required package: shiny
+
+Listening on http://127.0.0.1:4079
+Loading required package: httr
+Loading required package: progress
+Loading required package: R6
+```
+
+# Tutorial: Perform an individual level meta-analysis (ILMA) using a generalized linear model (GLM)
+
+Perform the following steps to load your data into an opal server:
+ * Access to your opal instance. If you don't have one, you can use the opal demo at obiba https://opal-demo.obiba.org (use administrator/password to login).
+ * Upload on the opal server your data. You can also try our example data in the [data](example/data) folder.
+
+Now go back to the VisualSHIELD instance. 
+Once the app is running you can navigate to `http://127.0.0.1:4079` or any other link the shiny server is writing to the console.
+The example app will require you to insert the name of one opal server to connect to, insert the link to the opal server you loaded your data into (ex. https://opal-demo.obiba.org ). 
+
+Now click Update and the shiny module will be updated allowing you to select the data tables to analyze.
+From "Opal Projects" select the name of your project, from "Data tables" select the name of the first of the tables you want to analyze.
+Click "+" allows you to insert another project and another table, so that you can federate the analysis. 
+**NOTE**: This is a single-server demo, but complex settings are not limited to a single opal server.
+
+From now on we will assume you selected the example data tables Study.1 Study.2 Study.3 Study.4 Study.5 Study.6 .
+Now click "Setup remote data tables"
 
 ## Embed VisualSHIELD UI module in your Shiny App
 

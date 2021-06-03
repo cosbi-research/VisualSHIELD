@@ -2,7 +2,7 @@ library(shiny)
 
 library(opalr)
 library(DSI)
-#library(DSOpal)
+library(DSOpal)
 library(dsBaseClient)
 library(VisualSHIELD)
 
