@@ -1252,7 +1252,19 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             if ( input$plotType == "hist") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," with an histogram plot", "\n"), file=LOG_FILE, append=TRUE)
               
-              h  <- dsBaseClient::ds.histogram(x = x_var, datasources = o)
+              h  <- tryCatch({
+                dsBaseClient::ds.histogram(x = x_var, datasources = o)
+              },
+              error=function(cond){
+                errs <- DSI::datashield.errors()
+                if( is.null(errs) )
+                  stop(cond)
+                else
+                  stop(errs)
+              },
+              warning=function(cond){
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
               
               if ( class(h) == "list" ) {
                 x <- h[[1]]$mids
@@ -1429,7 +1441,18 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                  "</p>"))
               
             }, error = function(e) {
-              shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', e ,'\'</div>'))
+              errs <- DSI::datashield.errors();
+              if( is.null(errs) ){
+                shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', errs ,'\'</div>'))
+                cat(paste0(Sys.time()," ", errs,'\n'), file=LOG_FILE, append=TRUE)
+              }else{
+                shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', e ,'\'</div>'))
+                cat(paste0(Sys.time()," ", e,'\n'), file=LOG_FILE, append=TRUE)
+              }
+            },
+            warning=function(cond){
+              shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', cond ,'\'</div>'))
+              cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
             })
           }
         })
@@ -1451,6 +1474,11 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               coeff <- mod$coefficients
               cbind(Variables=row.names(coeff), round(coeff, 3))
             }, error = function(e) {
+              errs <- DSI::datashield.errors()
+              if( is.null(errs) )
+                stop(e)
+              else
+                stop(errs)
             })
             
           }
