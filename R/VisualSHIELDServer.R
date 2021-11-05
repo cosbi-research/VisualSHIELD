@@ -1418,8 +1418,6 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                 y_var <- get.var.as.numeric(o, vars, var_y)
                 return(strsplit(x = y_var, split = '$', fixed=T)[[1]][2])
               })
-              print(x_names)
-              print(y_names)
               tryCatch({
                 res = dsCOVclient::dsrCCA(o, 'D', x_names, y_names, lambda1 = 0, lambda2 = 0.001)
                 mixOmics::plotIndiv(res, ind.names = F,
