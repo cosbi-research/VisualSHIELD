@@ -250,6 +250,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$var_y
         input$var_x
         input$plotType
+        input$intervals
         
         globalValues$showPlot <- FALSE
       })
@@ -1110,6 +1111,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             choices = list("Histogram"    = "hist",
                            "Contour Plot" = "contour",
                            "Heatmap"      = "heatmap",
+                           "Correlation"  = "correlation",
                            "Analisys"     = "analisys")
           )
         } 
@@ -1131,12 +1133,36 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             old_var_y <- globalValues$old_var_y
           
           list(
-            shiny::selectInput(ns("var_x"),
+            shiny::conditionalPanel(
+              condition = paste0("input['",ns('plotType'),"']  == 'hist' || input['",ns('plotType'),"']  == 'contour' || input['",ns('plotType'),"'] == 'heatmap'"),
+              
+              shiny::numericInput(ns("intervals"),
+                                 "Number of intervals",
+                                 value=10,
+                                 min=3,
+                                 step=1
+              )
+            ), 
+            shiny::conditionalPanel(
+              condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
+              
+              shinyWidgets::multiInput(ns("vars_x"), "Variates X",
+                                       choices=varnames
+              ),
+              shinyWidgets::multiInput(ns("vars_y"), "Variates Y",
+                                       choices=varnames
+              )
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['",ns('plotType'),"']  == 'hist' || input['",ns('plotType'),"']  == 'contour' || input['",ns('plotType'),"'] == 'heatmap'"),
+              
+              shiny::selectInput(ns("var_x"),
                                "Data variable",
                                # filter varnames based on true/false value in fcols
                                varnames,
                                selected=old_var_x
-            ), 
+              )
+            ),
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"']  == 'contour' || input['",ns('plotType'),"'] == 'heatmap'"),
               
@@ -1253,7 +1279,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," with an histogram plot", "\n"), file=LOG_FILE, append=TRUE)
               
               h  <- tryCatch({
-                dsBaseClient::ds.histogram(x = x_var, datasources = o)
+                dsBaseClient::ds.histogram(x = x_var, num.breaks = input$intervals, datasources = o)
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
@@ -1266,7 +1292,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                 cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
               })
               
-              if ( class(h) == "list" ) {
+              if( is.null(h) ){
+                stop("DataSHIELD plot returned an empty response")
+              }else if ( class(h) == "list" ) {
                 x <- h[[1]]$mids
                 counts <- Reduce("+", lapply(h, function(el){ el$counts }))
                 density <- Reduce("+", lapply(h, function(el){ el$density }))
@@ -1322,6 +1350,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 dsBaseClient::ds.contourPlot(x = x_var,
                                              y = y_var,
+                                             numints = input$intervals,
                                              show = "zoomed",
                                              datasources = o
                 )
@@ -1354,6 +1383,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 dsBaseClient::ds.heatmapPlot(x = x_var,
                                              y = y_var,
+                                             numints = input$intervals,
                                              show = "zoomed",
                                              datasources = o
                 )
@@ -1377,7 +1407,33 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               graphics::mtext(input$var_x, side=1, line=3, col = "black")
               graphics::mtext(input$var_y, side=2, line=3, col = "black")
               
-            } 
+            } else if ( input$plotType == "correlation") {
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$var_x," against ", input$var_y, "\n"), file=LOG_FILE, append=TRUE)
+              
+              x_names <- sapply(input$vars_x, function(var_x){
+                x_var <- get.var.as.numeric(o, vars, var_x)
+                return(strsplit(x = x_var, split = '$', fixed=T)[[1]][2])
+              })
+              y_names <- sapply(input$vars_y, function(var_y){
+                y_var <- get.var.as.numeric(o, vars, var_y)
+                return(strsplit(x = y_var, split = '$', fixed=T)[[1]][2])
+              })
+              tryCatch({
+                res = dsCOVclient::dsrCCA(o, 'D', x_names, y_names, lambda1 = 0, lambda2 = 0.001)
+                mixOmics::plotIndiv(res, ind.names = F,
+                                    legend = F, title = 'Federated Correlation Analysis (dsrCCA)')
+              },
+              error=function(cond){
+                errs <- DSI::datashield.errors()
+                if( is.null(errs) )
+                  stop(cond)
+                else
+                  stop(errs)
+              },
+              warning=function(cond){
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
+            }
           }
         })
         
@@ -1579,7 +1635,7 @@ get.opal.projects <- function(o) {
 get.var.as.factor <- function(o, vars, var){
   output_var <- NULL
   if( vars[var, ] == "numeric" || vars[var, ] == "integer" || vars[var, ] == "character" ){
-    output_var <- paste0(var,"_fac")
+    output_var <- paste0('D$',var,"_fac")
     dsBaseClient::ds.asFactor(input.var.name=paste0("D$",var), newobj.name=output_var, datasources=o)
   }else
     output_var <- paste0("D$",var)
@@ -1590,7 +1646,7 @@ get.var.as.factor <- function(o, vars, var){
 get.var.as.numeric <- function(o, vars, var){
   output_var <- NULL
   if( vars[var, ] == "factor" || vars[var, ] == "character" ){
-    output_var <- paste0(var,"_num")
+    output_var <- paste0('D$',var,"_num")
     dsBaseClient::ds.asNumeric(x.name=paste0("D$",var), newobj=output_var, datasources=o)
   }else
     output_var <- paste0("D$",var)

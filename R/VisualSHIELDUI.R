@@ -87,7 +87,7 @@ VisualSHIELDUI <- function(id, title){
                                                                               
                                                                               # plot for explorative analysis
                                                                               shiny::conditionalPanel(
-                                                                                condition = paste0("input['",ns('plotType'),"'] == 'hist' || input['",ns('plotType'),"'] == 'contour' || input['",ns('plotType'),"'] == 'heatmap'"),
+                                                                                condition = paste0("input['",ns('plotType'),"'] == 'hist' || input['",ns('plotType'),"'] == 'contour' || input['",ns('plotType'),"'] == 'heatmap' || input['",ns('plotType'),"'] == 'correlation'"),
                                                                                 
                                                                                 shiny::uiOutput(outputId = ns("plotStatus")),
                                                                                 shiny::plotOutput(ns("distPlot"))
