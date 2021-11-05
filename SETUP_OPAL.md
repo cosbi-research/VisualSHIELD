@@ -18,6 +18,7 @@
 7. click Administration -> DataHIELD , 
    * in *packages* click "Add Packages" select "Install base DataSHIELD packages"
    * in *packages* click "Add Packages" select "Repository: CRAN", "Name: tensorflow"
+   * in *packages* click "Add Packages" select "Repository: CRAN", "Name: geigen"
    * in *packages* click "Add Packages" select "Repository: GitHub", "User or organization name: sib-swiss", "Name: dsSwissKnife"
    * in *packages* click "Add Packages" select "Repository: GitHub", "User or organization name: vanduttran", "Name: dsSSCP"
    * Select a profile in the Profiles section
