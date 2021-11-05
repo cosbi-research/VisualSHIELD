@@ -250,6 +250,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$var_y
         input$var_x
         input$plotType
+        input$intervals
         
         globalValues$showPlot <- FALSE
       })
@@ -1131,6 +1132,12 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             old_var_y <- globalValues$old_var_y
           
           list(
+            shiny::numericInput(ns("intervals"),
+                               "Number of intervals",
+                               value=10,
+                               min=3,
+                               step=1
+            ), 
             shiny::selectInput(ns("var_x"),
                                "Data variable",
                                # filter varnames based on true/false value in fcols
@@ -1253,7 +1260,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," with an histogram plot", "\n"), file=LOG_FILE, append=TRUE)
               
               h  <- tryCatch({
-                dsBaseClient::ds.histogram(x = x_var, datasources = o)
+                dsBaseClient::ds.histogram(x = x_var, num.breaks = input$intervals, datasources = o)
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
@@ -1266,7 +1273,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                 cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
               })
               
-              if ( class(h) == "list" ) {
+              if( is.null(h) ){
+                stop("DataSHIELD plot returned an empty response")
+              }else if ( class(h) == "list" ) {
                 x <- h[[1]]$mids
                 counts <- Reduce("+", lapply(h, function(el){ el$counts }))
                 density <- Reduce("+", lapply(h, function(el){ el$density }))
@@ -1322,6 +1331,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 dsBaseClient::ds.contourPlot(x = x_var,
                                              y = y_var,
+                                             numints = input$intervals,
                                              show = "zoomed",
                                              datasources = o
                 )
@@ -1354,6 +1364,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 dsBaseClient::ds.heatmapPlot(x = x_var,
                                              y = y_var,
+                                             numints = input$intervals,
                                              show = "zoomed",
                                              datasources = o
                 )
