@@ -251,6 +251,10 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$var_x
         input$plotType
         input$intervals
+        input$vars_x
+        input$vars_y
+        input$cca_lambda1
+        input$cca_lambda2
         
         globalValues$showPlot <- FALSE
       })
@@ -1146,11 +1150,27 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
               
-              shinyWidgets::multiInput(ns("vars_x"), "Variates X",
-                                       choices=varnames
+              shiny::selectInput(ns("vars_x"), "Variates X",
+                                 choices=varnames,
+                                 multiple=T
               ),
-              shinyWidgets::multiInput(ns("vars_y"), "Variates Y",
-                                       choices=varnames
+              shiny::selectInput(ns("vars_y"), "Variates Y",
+                                 choices=varnames,
+                                 multiple=T
+              ),
+              shiny::numericInput(ns("cca_lambda1"),
+                                  "Regularization term for Cov(X) matrix",
+                                  value=0.0,
+                                  min=0.0,
+                                  step=0.001,
+                                  max=1.0
+              ),
+              shiny::numericInput(ns("cca_lambda2"),
+                                  "Regularization term for Cov(Y) matrix",
+                                  value=0.0,
+                                  min=0.0,
+                                  step=0.001,
+                                  max=1.0
               )
             ),
             shiny::conditionalPanel(
@@ -1419,7 +1439,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                 return(strsplit(x = y_var, split = '$', fixed=T)[[1]][2])
               })
               tryCatch({
-                res = dsCOVclient::dsrCCA(o, 'D', x_names, y_names, lambda1 = 0, lambda2 = 0.001)
+                res = dsCOVclient::dsrCCA(o, 'D', x_names, y_names, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 mixOmics::plotIndiv(res, ind.names = F,
                                     legend = F, title = 'Federated Correlation Analysis (dsrCCA)')
               },
