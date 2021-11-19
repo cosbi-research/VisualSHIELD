@@ -4,7 +4,10 @@ library(opalr)
 library(DSI)
 library(DSOpal)
 library(dsBaseClient)
-library(VisualSHIELD)
+library(dsCOVclient)
+#library(VisualSHIELD)
+source("../R/VisualSHIELDUI.R")
+source("../R/VisualSHIELDServer.R")
 
 shinyUI(
   fluidPage(

@@ -1115,6 +1115,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             choices = list("Histogram"    = "hist",
                            "Contour Plot" = "contour",
                            "Heatmap"      = "heatmap",
+                           "Principal Component Analysis" = "princomp",
                            "Correlation"  = "correlation",
                            "Analisys"     = "analisys")
           )
@@ -1453,6 +1454,29 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               warning=function(cond){
                 cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
               })
+            }else if(input$plotType == "princomp"){
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Principal Component Analysis (PCA) on current table..\n"), file=LOG_FILE, append=TRUE)
+              vars_num <- get.vars.as.numeric(o, 'D', vars);
+              tryCatch({
+                dsBaseClient::ds.dataFrame(x=as.character(vars_num), 
+                                           #row.names = names(vars_num), 
+                                           stringsAsFactors = F,
+                                           newobj='D_num',
+                                           notify.of.progress = F,
+                                           datasources=o)
+                princomp <- dsSwissKnifeClient::dssPrincomp(df='D_num', datasources=o);
+                dsSwissKnifeClient::biplot.dssPrincomp(princomp$global)
+              },
+              error=function(cond){
+                errs <- DSI::datashield.errors()
+                if( is.null(errs) )
+                  stop(cond)
+                else
+                  stop(errs)
+              },
+              warning=function(cond){
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
             }
           }
         })
@@ -1653,24 +1677,45 @@ get.opal.projects <- function(o) {
 }
 
 get.var.as.factor <- function(o, vars, var){
-  output_var <- NULL
-  if( vars[var, ] == "numeric" || vars[var, ] == "integer" || vars[var, ] == "character" ){
-    output_var <- paste0('D$',var,"_fac")
-    dsBaseClient::ds.asFactor(input.var.name=paste0("D$",var), newobj.name=output_var, datasources=o)
-  }else
-    output_var <- paste0("D$",var)
-  
-  return(output_var)
+  get.var.as(o, 'D',"factor", "_fac", vars, var)
 }
 
 get.var.as.numeric <- function(o, vars, var){
+  get.var.as(o, 'D', c("numeric","integer"), "_num", vars, var)
+}
+
+# convert D table to D_num with all the columns of D converted to numeric
+get.vars.as.numeric <- function(o, in_df, vars){
+  get.vars.as(o, in_df, vars, c("numeric","integer"))
+}
+
+get.vars.as <- function(o, in_df, vars, target_types){
+  varnames<-row.names(vars)
+  sapply(varnames, function(varname){
+    get.var.as(o, in_df, target_types, "", vars, varname)
+  })
+}
+
+get.var.as <- function(o, in_df, target_types, target_suffix, vars, var){
   output_var <- NULL
-  if( vars[var, ] == "factor" || vars[var, ] == "character" ){
-    output_var <- paste0('D$',var,"_num")
-    dsBaseClient::ds.asNumeric(x.name=paste0("D$",var), newobj=output_var, datasources=o)
-  }else
-    output_var <- paste0("D$",var)
+  all_types <- c("factor","character","integer","numeric")
+  other_types <- all_types[sapply(all_types, function(x){all(x!=target_types)})]
   
+  in_var <- paste0(in_df,"$",var)
+  output_var <- paste0(in_df,'$',var,target_suffix)
+  
+  if( any(as.character(vars[var, ]) == other_types) ){
+    # convert and assign
+    if( any(target_types == "numeric") )
+      dsBaseClient::ds.asNumeric(x.name=in_var, newobj=output_var, datasources=o)
+    else if( any(target_types == "factor") )
+      dsBaseClient::ds.asFactor(input.var.name=in_var, newobj.name=output_var, datasources=o)
+    else
+      stop(paste0("Error unknown target type ", target_types))
+  }else if(nchar(target_suffix) > 0 ){
+    # just assign
+    dsBaseClient::ds.assign(toAssign = in_var, newobj = output_var, datasources=o)
+  }
   return(output_var)
 }
 
