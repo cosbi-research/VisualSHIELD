@@ -90,7 +90,8 @@ VisualSHIELDUI <- function(id, title){
                                                                                 condition = paste0("input['",ns('plotType'),"'] == 'hist' || input['",ns('plotType'),"'] == 'contour' || input['",ns('plotType'),"'] == 'heatmap' || input['",ns('plotType'),"'] == 'correlation' || input['",ns('plotType'),"'] == 'princomp' || input['",ns('plotType'),"'] == 'randomforest'"),
                                                                                 
                                                                                 shiny::uiOutput(outputId = ns("plotStatus")),
-                                                                                shiny::plotOutput(ns("distPlot"))
+                                                                                shiny::plotOutput(ns("distPlot")),
+                                                                                shiny::uiOutput(outputId = ns("plotDownload"))
                                                                               ),
                                                                               
                                                                               # plot for       

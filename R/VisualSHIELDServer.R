@@ -261,6 +261,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$cca_lambda2
         
         globalValues$showPlot <- FALSE
+        globalValues$last_RFS <- NA
       })
       
       # if button clicked -> show TRUE
@@ -1330,6 +1331,28 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
           shiny::tagList(shiny::h4("Specify model parameters and click 'Run federated plot'."))
       })
       
+      output$plotDownload <- shiny::renderUI({
+        if(!globalValues$showPlot || !is.load.ready() || !is.analysis.ready())
+          return(shiny::tagList(shiny::span("")))
+        shiny::isolate({
+          if ( input$plotType == "randomforest") {
+            downloadButton(ns("downloadRFS"), "Download Random Forests model as an RDS")
+          }else{
+            shiny::tagList(shiny::span(""))
+          }
+        })
+      })
+      
+      output$downloadRFS <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          paste0(paste(names(o), collapse="-"), "-RandomForests.rds")
+        },
+        content = function(file) {
+          saveRDS(globalValues$last_RFS, file=file)
+        }
+      )
+      
       # plot explorative analysis
       output$distPlot <- shiny::renderPlot({
         if(!globalValues$showPlot || !is.load.ready() || !is.analysis.ready())
@@ -1521,6 +1544,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars, localImp=T),
                                                             async=F, datasources=o);
+                globalValues$last_RFS <- rfs;
                 #min_depth_frame <- randomForestExplainer::min_depth_distribution(rfs[[1]])
                 #randomForestExplainer::plot_min_depth_distribution(min_depth_frame)
                 importance_frame <- randomForestExplainer::measure_importance(rfs[[1]])
