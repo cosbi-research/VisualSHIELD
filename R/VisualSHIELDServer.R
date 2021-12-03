@@ -1176,7 +1176,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               )
             ),
             shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
+              condition = paste0("input['",ns('plotType'),"'] == 'randomforest'"),
               shiny::selectInput(ns("vars_x"), "Classification ariables",
                                  choices=varnames,
                                  multiple=T
