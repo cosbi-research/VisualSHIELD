@@ -1490,8 +1490,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars),
                                                             async=F, datasources=o);
-                print(rfs);
-                shiny::HTML(str(rfs))
+                plot(rfs, log="y", main="Random Forest MSE");
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
