@@ -1190,7 +1190,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               shiny::selectInput(ns("vars"), "Classification variables",
                                  choices=varnames,
                                  multiple=T
-              )
+              ),
               shiny::selectInput(ns("x_measure"), "Importance plot X axis",
                                  choices=list("Mean min depth"="mean_min_depth",
                                               "Number of nodes"="no_of_nodes",
@@ -1198,9 +1198,8 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
-                                              "P-value", "p_value"),
-                                 multiple=T
-              )
+                                              "P-value"="p_value"),
+              ),
               shiny::selectInput(ns("y_measure"), "Importance plot Y axis",
                                  choices=list("Mean min depth"="mean_min_depth",
                                               "Number of nodes"="no_of_nodes",
@@ -1208,9 +1207,8 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
-                                              "P-value", "p_value"),
-                                 multiple=T
-              )
+                                              "P-value"="p_value")
+              ),
               shiny::selectInput(ns("size_measure"), "Importance plot dot-size",
                                  choices=list("Mean min depth"="mean_min_depth",
                                               "Number of nodes"="no_of_nodes",
@@ -1218,9 +1216,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
-                                              "P-value", "p_value"),
-                                 multiple=T
-              )
+                                              "P-value"="p_value")
+              ),
+	      shiny::HTML("For further informations see <a href=\"https://modeloriented.github.io/randomForestExplainer/articles/randomForestExplainer.html#multi-way-importance-plot-1\" target=\"_blank\">Multi-way importance plot</a>")
             ),
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"']  == 'hist' || input['",ns('plotType'),"']  == 'contour' || input['",ns('plotType'),"'] == 'heatmap'"),
@@ -1548,12 +1546,10 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                 #min_depth_frame <- randomForestExplainer::min_depth_distribution(rfs[[1]])
                 #randomForestExplainer::plot_min_depth_distribution(min_depth_frame)
                 importance_frame <- randomForestExplainer::measure_importance(rfs[[1]])
-		print(colnames(importance_frame))
                 randomForestExplainer::plot_multi_way_importance(importance_frame, 
                                                                  x_measure=input$x_measure, 
                                                                  y_measure=input$y_measure, 
                                                                  size_measure=input$size_measure)
-		#plot(rfs, type="l", log="y", main="Random Forest MSE");
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
