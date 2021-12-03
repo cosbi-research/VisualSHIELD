@@ -1189,7 +1189,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               shiny::selectInput(ns("vars"), "Classification variables",
                                  choices=varnames,
                                  multiple=T
-              )
+              ),
               shiny::selectInput(ns("x_measure"), "Importance plot X axis",
                                  choices=list("Mean min depth"="mean_min_depth",
                                               "Number of nodes"="no_of_nodes",
@@ -1198,8 +1198,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
                                               "P-value", "p_value"),
-                                 multiple=T
-              )
+              ),
               shiny::selectInput(ns("y_measure"), "Importance plot Y axis",
                                  choices=list("Mean min depth"="mean_min_depth",
                                               "Number of nodes"="no_of_nodes",
@@ -1207,9 +1206,8 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
-                                              "P-value", "p_value"),
-                                 multiple=T
-              )
+                                              "P-value", "p_value")
+              ),
               shiny::selectInput(ns("size_measure"), "Importance plot dot-size",
                                  choices=list("Mean min depth"="mean_min_depth",
                                               "Number of nodes"="no_of_nodes",
@@ -1217,8 +1215,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
-                                              "P-value", "p_value"),
-                                 multiple=T
+                                              "P-value", "p_value")
               )
             ),
             shiny::conditionalPanel(
