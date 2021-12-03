@@ -22,6 +22,7 @@
    * in *packages* click "Add Packages" select "Repository: CRAN", "Name: tensorflow"
    * in *packages* click "Add Packages" select "Repository: CRAN", "Name: geigen"
    * in *packages* click "Add Packages" select "Repository: CRAN", "Name: VIM"
+   * in *packages* click "Add Packages" select "Repository: CRAN", "Name: randomForest"
    * in *packages* click "Add Packages" select "Repository: GitHub", "User or organization name: sib-swiss", "Name: dsSwissKnife"
    * in *packages* click "Add Packages" select "Repository: GitHub", "User or organization name: sib-swiss", "Name: dsSwissKnifeClient"
    * in *packages* click "Add Packages" select "Repository: GitHub", "User or organization name: vanduttran", "Name: dsSSCP"
