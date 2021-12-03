@@ -1430,17 +1430,11 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               
             } else if ( input$plotType == "correlation") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$var_x," against ", input$var_y, "\n"), file=LOG_FILE, append=TRUE)
-              
-              x_names <- sapply(input$vars_x, function(var_x){
-                x_var <- get.var.as.numeric(o, vars, var_x)
-                return(strsplit(x = x_var, split = '$', fixed=T)[[1]][2])
-              })
-              y_names <- sapply(input$vars_y, function(var_y){
-                y_var <- get.var.as.numeric(o, vars, var_y)
-                return(strsplit(x = y_var, split = '$', fixed=T)[[1]][2])
-              })
+              print(c(input$vars_x, input$vars_y));
+              get.vars.as.numeric(o, 'D', 'D.num', c(input$vars_x, input$vars_y), vars);
+
               tryCatch({
-                res = dsCOVclient::dsrCCA(o, 'D', x_names, y_names, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
+                res = dsCOVclient::dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 mixOmics::plotIndiv(res, ind.names = F,
                                     legend = F, title = 'Federated Correlation Analysis (dsrCCA)')
               },
@@ -1456,15 +1450,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               })
             }else if(input$plotType == "princomp"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Principal Component Analysis (PCA) on current table..\n"), file=LOG_FILE, append=TRUE)
-              vars_num <- get.vars.as.numeric(o, 'D', vars);
+              get.vars.as.numeric(o, 'D', 'D.num', row.names(vars), vars);
               tryCatch({
-                dsBaseClient::ds.dataFrame(x=as.character(vars_num), 
-                                           #row.names = names(vars_num), 
-                                           stringsAsFactors = F,
-                                           newobj='D_num',
-                                           notify.of.progress = F,
-                                           datasources=o)
-                princomp <- dsSwissKnifeClient::dssPrincomp(df='D_num', datasources=o);
+                princomp <- dsSwissKnifeClient::dssPrincomp(df='D.num', datasources=o);
                 dsSwissKnifeClient::biplot.dssPrincomp(princomp$global)
               },
               error=function(cond){
@@ -1685,26 +1673,31 @@ get.var.as.numeric <- function(o, vars, var){
 }
 
 # convert D table to D_num with all the columns of D converted to numeric
-get.vars.as.numeric <- function(o, in_df, vars){
-  get.vars.as(o, in_df, vars, c("numeric","integer"))
+get.vars.as.numeric <- function(o, in_df, out_df, vars, in_df_var_types){
+  get.vars.as(o, in_df, out_df, vars, in_df_var_types, c("numeric","integer"), "")
 }
 
-get.vars.as <- function(o, in_df, vars, target_types){
-  varnames<-row.names(vars)
-  sapply(varnames, function(varname){
-    get.var.as(o, in_df, target_types, "", vars, varname)
+get.vars.as <- function(o, in_df, out_df, vars, in_df_var_types, target_types, target_suffix){
+  vars_num<-sapply(vars, function(varname){
+    get.var.as(o, in_df, target_types, target_suffix, in_df_var_types, varname)
   })
+  dsBaseClient::ds.dataFrame(x=as.character(vars_num), 
+                             #row.names = names(vars_num), 
+                             stringsAsFactors = F,
+                             newobj=out_df,
+                             notify.of.progress = F,
+                             datasources=o)
 }
 
-get.var.as <- function(o, in_df, target_types, target_suffix, vars, var){
+get.var.as <- function(o, in_df, target_types, target_suffix, in_df_var_types, var){
   output_var <- NULL
   all_types <- c("factor","character","integer","numeric")
   other_types <- all_types[sapply(all_types, function(x){all(x!=target_types)})]
   
   in_var <- paste0(in_df,"$",var)
-  output_var <- paste0(in_df,'$',var,target_suffix)
+  output_var <- paste0(var,target_suffix)
   
-  if( any(as.character(vars[var, ]) == other_types) ){
+  if( any(as.character(in_df_var_types[var, ]) == other_types) ){
     # convert and assign
     if( any(target_types == "numeric") )
       dsBaseClient::ds.asNumeric(x.name=in_var, newobj=output_var, datasources=o)
@@ -1712,7 +1705,7 @@ get.var.as <- function(o, in_df, target_types, target_suffix, vars, var){
       dsBaseClient::ds.asFactor(input.var.name=in_var, newobj.name=output_var, datasources=o)
     else
       stop(paste0("Error unknown target type ", target_types))
-  }else if(nchar(target_suffix) > 0 ){
+  }else{
     # just assign
     dsBaseClient::ds.assign(toAssign = in_var, newobj = output_var, datasources=o)
   }
