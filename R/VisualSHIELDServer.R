@@ -1488,7 +1488,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars),
                                                             async=F, datasources=o);
-                plot(rfs, type="l", log="y", main="Random Forest MSE");
+                min_depth_frame <- randomForestExplainer::min_depth_distribution(forest)
+                randomForestExplainer::plot_min_depth_distribution(min_depth_frame)
+                #plot(rfs, type="l", log="y", main="Random Forest MSE");
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
