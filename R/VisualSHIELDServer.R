@@ -251,6 +251,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$var_x
         input$plotType
         input$intervals
+        input$vars
         input$vars_x
         input$vars_y
         input$cca_lambda1
@@ -1182,7 +1183,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                  varnames,
                                  selected=old_var_y
               ),
-              shiny::selectInput(ns("vars_x"), "Classification ariables",
+              shiny::selectInput(ns("vars"), "Classification variables",
                                  choices=varnames,
                                  multiple=T
               )
@@ -1483,10 +1484,11 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               })
             }else if(input$plotType == "randomforest"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', input$vars_x, vars);
+              get.vars.as.numeric(o, 'D', 'D.num', input$vars, vars);
               tryCatch({
-                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars_x),
+                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars),
                                                             async=F, datasources=o);
+                print(rfs);
                 shiny::HTML(str(rfs))
               },
               error=function(cond){
