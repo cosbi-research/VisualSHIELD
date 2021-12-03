@@ -1116,6 +1116,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                            "Contour Plot" = "contour",
                            "Heatmap"      = "heatmap",
                            "Principal Component Analysis" = "princomp",
+                           "Random Forest" = "randomforest",
                            "Correlation"  = "correlation",
                            "Analisys"     = "analisys")
           )
@@ -1172,6 +1173,18 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                   min=0.0,
                                   step=0.001,
                                   max=1.0
+              )
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
+              shiny::selectInput(ns("vars_x"), "Classification ariables",
+                                 choices=varnames,
+                                 multiple=T
+              ),
+              shiny::selectInput(ns("var_y"),
+                                 "Response factor",
+                                 varnames,
+                                 selected=old_var_y
               )
             ),
             shiny::conditionalPanel(
@@ -1454,9 +1467,27 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               tryCatch({
                 princomp <- dsSwissKnifeClient::dssPrincomp(df='D.num', type="combine", 
                                                             center=T, scale=F,
-                                                            scores.suffix='_scores',
+                                                            scores.suffix='.scores',
                                                             async=F, datasources=o);
                 dsSwissKnifeClient::biplot.dssPrincomp(princomp$global)
+              },
+              error=function(cond){
+                errs <- DSI::datashield.errors()
+                if( is.null(errs) )
+                  stop(cond)
+                else
+                  stop(errs)
+              },
+              warning=function(cond){
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
+            }else if(input$plotType == "randomforest"){
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
+              get.vars.as.numeric(o, 'D', 'D.num', input$vars_x, vars);
+              tryCatch({
+                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars_x),
+                                                            async=F, datasources=o);
+                shiny::HTML(str(rfs))
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
