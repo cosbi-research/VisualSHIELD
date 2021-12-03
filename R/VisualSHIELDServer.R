@@ -1485,6 +1485,8 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             }else if(input$plotType == "randomforest"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
               get.vars.as.numeric(o, 'D', 'D.num', input$vars, vars);
+              print(input$var_y)
+              print(input$vars)
               tryCatch({
                 rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars),
                                                             async=F, datasources=o);
