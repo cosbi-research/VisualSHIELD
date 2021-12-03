@@ -1489,11 +1489,14 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
               get.vars.as.numeric(o, 'D', 'D.num', c(input$var_y, input$vars), vars);
               tryCatch({
-                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars),
+                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars, localImp=T),
                                                             async=F, datasources=o);
-                min_depth_frame <- randomForestExplainer::min_depth_distribution(forest)
-                randomForestExplainer::plot_min_depth_distribution(min_depth_frame)
-                #plot(rfs, type="l", log="y", main="Random Forest MSE");
+                #min_depth_frame <- randomForestExplainer::min_depth_distribution(rfs[[1]])
+                #randomForestExplainer::plot_min_depth_distribution(min_depth_frame)
+                importance_frame <- randomForestExplainer::measure_importance(rfs[[1]])
+		print(colnames(importance_frame))
+                randomForestExplainer::plot_multi_way_importance(importance_frame, size_measure="mse_increase")
+		#plot(rfs, type="l", log="y", main="Random Forest MSE");
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
