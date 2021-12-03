@@ -252,6 +252,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$plotType
         input$intervals
         input$vars
+        input$x_measure
+        input$y_measure
+        input$size_measure
         input$vars_x
         input$vars_y
         input$cca_lambda1
