@@ -1430,11 +1430,11 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               
             } else if ( input$plotType == "correlation") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$var_x," against ", input$var_y, "\n"), file=LOG_FILE, append=TRUE)
-              print(c(input$vars_x, input$vars_y));
               get.vars.as.numeric(o, 'D', 'D.num', c(input$vars_x, input$vars_y), vars);
 
               tryCatch({
                 res = dsCOVclient::dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
+                #res = dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 mixOmics::plotIndiv(res, ind.names = F,
                                     legend = F, title = 'Federated Correlation Analysis (dsrCCA)')
               },

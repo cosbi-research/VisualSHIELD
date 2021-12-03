@@ -6,6 +6,8 @@ library(DSOpal)
 library(dsBaseClient)
 library(dsCOVclient)
 #library(VisualSHIELD)
+
+#source("../R/client_func.R")
 source("../R/VisualSHIELDUI.R")
 source("../R/VisualSHIELDServer.R")
 
