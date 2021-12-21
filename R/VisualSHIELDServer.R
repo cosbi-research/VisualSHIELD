@@ -1156,7 +1156,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               )
             ), 
             shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
+              condition = paste0("input['",ns('plotType'),"'] == 'boxplot' || input['",ns('plotType'),"'] == 'princomp'"),
               
               shiny::selectInput(ns("vars_x"), "Variates",
                                  choices=varnames,
@@ -1550,7 +1550,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               })
             }else if(input$plotType == "princomp"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Principal Component Analysis (PCA) on current table..\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'Variables', row.names(vars), vars);
+              get.vars.as.numeric(o, 'D', 'Variables', 
+                                  input$vars_x,
+                                  vars);
               tryCatch({
                 princomp <- dsSwissKnifeClient::dssPrincomp(df='Variables', type="combine", 
                                                             center=T, scale=F,
