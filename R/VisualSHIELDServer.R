@@ -1120,6 +1120,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             choices = list("Histogram"    = "hist",
                            "Contour Plot" = "contour",
                            "Heatmap"      = "heatmap",
+                           "Box-plot"     = "boxplot",
                            "Principal Component Analysis" = "princomp",
                            "Random Forest" = "randomforest",
                            "Correlation"  = "correlation",
@@ -1154,6 +1155,14 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                                  step=1
               )
             ), 
+            shiny::conditionalPanel(
+              condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
+              
+              shiny::selectInput(ns("vars_x"), "Variates",
+                                 choices=varnames,
+                                 multiple=T
+              )
+            ),
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
               
@@ -1496,6 +1505,23 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               graphics::mtext(input$var_x, side=1, line=3, col = "black")
               graphics::mtext(input$var_y, side=2, line=3, col = "black")
               
+            } else if ( input$plotType == "boxplot") {
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing box-plot on ", input$vars_x,"\n"), file=LOG_FILE, append=TRUE)
+              #get.vars.as.numeric(o, 'D', 'D.num', c(input$vars_x, input$vars_y), vars);
+              
+              tryCatch({
+                dsBaseClient::ds.boxPlot(datasources=o, x='D', variables=input$vars_x, type="pooled")
+              },
+              error=function(cond){
+                errs <- DSI::datashield.errors()
+                if( is.null(errs) )
+                  stop(cond)
+                else
+                  stop(errs)
+              },
+              warning=function(cond){
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
             } else if ( input$plotType == "correlation") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$var_x," against ", input$var_y, "\n"), file=LOG_FILE, append=TRUE)
               get.vars.as.numeric(o, 'D', 'D.num', c(input$vars_x, input$vars_y), vars);
