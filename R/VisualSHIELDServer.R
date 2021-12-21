@@ -1370,14 +1370,18 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         shiny::isolate({
           if ( !is.null(input$plotType) && !is.null(input$var_x) && input$plotType != 'analisys' ) {
             vars <- get.ds.project.table.variables()
-            # get variable as type == numeric if it is not
-            x_var <- get.var.as.numeric(o, vars, input$var_x)
-            
+
             if ( input$plotType == "hist") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," with an histogram plot", "\n"), file=LOG_FILE, append=TRUE)
+              x_var <- get.var.as.numeric(o, vars, input$var_x)
               
               h  <- tryCatch({
-                dsBaseClient::ds.histogram(x = x_var, num.breaks = input$intervals, datasources = o)
+                dsBaseClient::ds.histogram(x = x_var, num.breaks = input$intervals, 
+                                           method='probabilistic',
+                                           type='combine',
+                                           noise = 0.26,
+                                           vertical.axis='Frequency',
+                                           datasources = o)
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
@@ -1440,8 +1444,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               #     )
               
             } else if ( input$plotType == "contour") {
-              y_var <- get.var.as.numeric(o, vars, input$var_y)
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," against ", input$var_y," with an contour plot", "\n"), file=LOG_FILE, append=TRUE)
+              x_var <- get.var.as.numeric(o, vars, input$var_x)
+              y_var <- get.var.as.numeric(o, vars, input$var_y)
               
               # delete unclear labels and title
               graphics::par(col.main="white", col.lab="white")
@@ -1474,8 +1479,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               graphics::mtext(input$var_y, side=2, line=3, col = "black")
               
             } else if ( input$plotType == "heatmap") {
-              y_var <- get.var.as.numeric(o, vars, input$var_y)
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," against ", input$var_y," with an heatmap plot", "\n"), file=LOG_FILE, append=TRUE)
+              y_var <- get.var.as.numeric(o, vars, input$var_y)
+              x_var <- get.var.as.numeric(o, vars, input$var_x)
               
               graphics::par(col.main="white", col.lab="white")
               tryCatch({
@@ -1507,10 +1513,10 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               
             } else if ( input$plotType == "boxplot") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing box-plot on ", input$vars_x,"\n"), file=LOG_FILE, append=TRUE)
-              #get.vars.as.numeric(o, 'D', 'D.num', c(input$vars_x, input$vars_y), vars);
+              get.vars.as.numeric(o, 'D', 'D.num', input$vars_x, vars);
               
               tryCatch({
-                dsBaseClient::ds.boxPlot(datasources=o, x='D', variables=input$vars_x, type="pooled")
+                dsBaseClient::ds.boxPlot(datasources=o, x='D.num', variables=input$vars_x, type="pooled")
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
@@ -1825,9 +1831,27 @@ get.var.as <- function(o, in_df, target_types, target_suffix, in_df_var_types, v
   if( any(as.character(in_df_var_types[var, ]) == other_types) ){
     # convert and assign
     if( any(target_types == "numeric") )
-      dsBaseClient::ds.asNumeric(x.name=in_var, newobj=output_var, datasources=o)
+      tryCatch({
+        dsBaseClient::ds.asNumeric(x.name=in_var, newobj=output_var, datasources=o)
+      },
+      error=function(cond){
+        errs <- DSI::datashield.errors()
+        if( is.null(errs) )
+          stop(cond)
+        else
+          stop(errs)
+      })
     else if( any(target_types == "factor") )
-      dsBaseClient::ds.asFactor(input.var.name=in_var, newobj.name=output_var, datasources=o)
+      tryCatch({
+        dsBaseClient::ds.asFactor(input.var.name=in_var, newobj.name=output_var, datasources=o)
+      },
+      error=function(cond){
+        errs <- DSI::datashield.errors()
+        if( is.null(errs) )
+          stop(cond)
+        else
+          stop(errs)
+      })
     else
       stop(paste0("Error unknown target type ", target_types))
   }else{
