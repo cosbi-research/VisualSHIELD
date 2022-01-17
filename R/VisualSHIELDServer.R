@@ -1166,11 +1166,11 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
               
-              shiny::selectInput(ns("vars_x"), "Variates X",
+              shiny::selectInput(ns("cca_vars_x"), "Variates X",
                                  choices=varnames,
                                  multiple=T
               ),
-              shiny::selectInput(ns("vars_y"), "Variates Y",
+              shiny::selectInput(ns("cca_vars_y"), "Variates Y",
                                  choices=varnames,
                                  multiple=T
               ),
@@ -1530,10 +1530,10 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               })
             } else if ( input$plotType == "correlation") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$var_x," against ", input$var_y, "\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', c(input$vars_x, input$vars_y), vars);
+              get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars);
 
               tryCatch({
-                res = dsCOVclient::dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
+                res = dsCOVclient::dsrCCA(o, 'D.num', input$cca_vars_x, input$cca_vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 #res = dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 mixOmics::plotIndiv(res, ind.names = F,
                                     legend = F, title = 'Federated Correlation Analysis (dsrCCA)')
