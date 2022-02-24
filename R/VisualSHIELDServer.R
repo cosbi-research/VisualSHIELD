@@ -259,9 +259,14 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$vars_y
         input$cca_lambda1
         input$cca_lambda2
+        input$knn_vars_x
+        input$knn_clusters
+        input$knn_max_iter
+        input$knn_start
         
         globalValues$showPlot <- FALSE
         globalValues$last_RFS <- NA
+        globalValues$last_KNN <- NA
       })
       
       # if button clicked -> show TRUE
@@ -1156,11 +1161,40 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               )
             ), 
             shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"'] == 'boxplot' || input['",ns('plotType'),"'] == 'princomp'"),
+              condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
               
               shiny::selectInput(ns("vars_x"), "Variates",
                                  choices=varnames,
                                  multiple=T
+              )
+            ),
+            shiny::conditionalPanel(
+              condition = paste0("input['",ns('plotType'),"'] == 'princomp'"),
+              
+              shiny::selectInput(ns("knn_vars_x"), "Variates",
+                                 choices=varnames,
+                                 multiple=T
+              ),
+              shiny::numericInput(ns("knn_clusters"),
+                                  "Number of clusters to compute (K-NN)",
+                                  value=3,
+                                  min=2,
+                                  step=1,
+                                  max=50
+              ),
+              shiny::numericInput(ns("knn_max_iter"),
+                                  "Maximum number of iterations (K-NN)",
+                                  value=50,
+                                  min=2,
+                                  step=1,
+                                  max=100
+              ),
+              shiny::numericInput(ns("knn_start"),
+                                  "Starting number of clusters (K-NN)",
+                                  value=60,
+                                  min=2,
+                                  step=1,
+                                  max=100
               )
             ),
             shiny::conditionalPanel(
@@ -1335,7 +1369,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
       
       output$plotStatus <- shiny::renderUI({
         if(!globalValues$showPlot)
-          shiny::tagList(shiny::h4("Specify model parameters and click 'Run federated plot'."))
+          shiny::tagList(shiny::h4("Specify model parameters and click 'Run federated analysis'."))
       })
       
       output$plotDownload <- shiny::renderUI({
@@ -1344,6 +1378,8 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         shiny::isolate({
           if ( input$plotType == "randomforest") {
             downloadButton(ns("downloadRFS"), "Download Random Forests model as an RDS")
+          }else if ( input$plotType == "princomp") {
+              downloadButton(ns("downloadKNN"), "Download K-nearest neighbor model as an RDS")
           }else{
             shiny::tagList(shiny::span(""))
           }
@@ -1357,6 +1393,15 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         },
         content = function(file) {
           saveRDS(globalValues$last_RFS, file=file)
+        }
+      )
+      output$downloadKNN <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          paste0(paste(names(o), collapse="-"), "-KNN.rds")
+        },
+        content = function(file) {
+          saveRDS(globalValues$last_KNN, file=file)
         }
       )
       
@@ -1551,16 +1596,21 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             }else if(input$plotType == "princomp"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Principal Component Analysis (PCA) on current table..\n"), file=LOG_FILE, append=TRUE)
               get.vars.as.numeric(o, 'D', 'Variables', 
-                                  input$vars_x,
+                                  input$knn_vars_x,
                                   vars);
               tryCatch({
                 princomp <- dsSwissKnifeClient::dssPrincomp(df='Variables', type="combine", 
                                                             center=T, scale=F,
                                                             scores.suffix='.scores',
                                                             async=T, datasources=o);
+                knn <- dsSwissKnifeClient::dssKmeans('Variables', centers = input$knn_clusters, 
+                                                     iter.max = input$knn_max_iter, nstart = input$knn_start, 
+                                                     datasources=o);
+                globalValues$last_KNN <- knn;
                 dsSwissKnifeClient::biplot.dssPrincomp(princomp$global,
                                                        type="combine",
                                                        draw.arrows = T,
+                                                       levels = 'Variables_km_clust3',
                                                        datasources=o);
               },
               error=function(cond){

@@ -93,7 +93,6 @@ VisualSHIELDUI <- function(id, title){
                                                                                 shiny::plotOutput(ns("distPlot")),
                                                                                 shiny::uiOutput(outputId = ns("plotDownload"))
                                                                               ),
-                                                                              
                                                                               # plot for       
                                                                               shiny::conditionalPanel(
                                                                                 condition = paste0("input['",ns('plotType'),"'] == 'analisys'"),
