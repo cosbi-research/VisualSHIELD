@@ -1129,6 +1129,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                            "Principal Component Analysis" = "princomp",
                            "Random Forest" = "randomforest",
                            "Correlation"  = "correlation",
+                           "Data imputation" = "vim",
                            "Analisys"     = "analisys")
           )
         } 
@@ -1161,7 +1162,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               )
             ), 
             shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
+              condition = paste0("input['",ns('plotType'),"'] == 'boxplot' || input['",ns('plotType'),"'] == 'vim'"),
               
               shiny::selectInput(ns("vars_x"), "Variates",
                                  choices=varnames,
@@ -1573,6 +1574,29 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               warning=function(cond){
                 cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
               })
+            } else if ( input$plotType == "vim") {
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing NA imputation (VIM) on ", input$vars_x,"\n"), file=LOG_FILE, append=TRUE)
+              get.vars.as.numeric(o, 'D', 'D.num', input$vars_x, vars);
+              
+              tryCatch({
+                plots <- dsSwissKnifeClient::dssVIM('aggr',data='D.num', newobj = NULL, datasources=o)
+                graphics::par(col.main="white", col.lab="white", mfrow = c(length(plots),1) )
+                # we can plot the results of the aggr function for each node:
+                for(p in plots){
+                  graphics::plot(p)
+                }
+              },
+              error=function(cond){
+                errs <- DSI::datashield.errors()
+                if( is.null(errs) )
+                  stop(cond)
+                else
+                  stop(errs)
+              },
+              warning=function(cond){
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
+              
             } else if ( input$plotType == "correlation") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$var_x," against ", input$var_y, "\n"), file=LOG_FILE, append=TRUE)
               get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars);
