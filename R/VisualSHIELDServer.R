@@ -231,6 +231,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         input$dsProjectTablesList 
         input$analysis
         input$var_target
+        input$var_time
         input$var_explanatory
         input$null_var_explanatory
         input$familyFunction
@@ -1290,19 +1291,22 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
       })
       
       output$varAnalysis <- shiny::renderUI({
+        # dataframe, rownames are the name of the variable
+        # $type is the type of the variable
+        vars <- get.ds.project.table.variables()
+        varnames <- get.input.named.vars(vars)
         
         list(
           shiny::selectInput(
             ns("analysis"),
             label = "Analisys type:",
             choices = list("Linear Regression" = "lm",
-                           "Generalized linear model (GLM)" = "glm")
+                           "Generalized linear model (GLM)" = "glm",
+                           "Survival analysis" = "coxp")
           ),
           
           shiny::conditionalPanel(
-            
             condition = paste0("input['", ns('analysis'), "'] == 'glm'"),
-            
             shiny::selectInput(
               ns("familyFunction"),
               label = "Output distribution",
@@ -1312,24 +1316,23 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
           ),
           
           shiny::conditionalPanel(
-            
-            condition = paste0("input", ns('analysis'), "'] == 'lm' ||  input['", ns('analysis'), "'] == 'glm'"),
-            
-            {
-              # dataframe, rownames are the name of the variable
-              # $type is the type of the variable
-              vars <- get.ds.project.table.variables()
-              varnames <- get.input.named.vars(vars)
-              
-              list(
-                shiny::selectInput(
-                  ns("var_target"),
-                  label = "Dependent variable",
-                  choices = varnames
-                )
-              )
-            },
-            
+            condition = paste0("input['", ns('analysis'), "'] == 'lm' ||  input['", ns('analysis'), "'] == 'glm' ||  input['", ns('analysis'), "'] == 'coxp'"),
+            shiny::selectInput(
+              ns("var_target"),
+              label = "Dependent variable",
+              choices = varnames
+            )
+          ),
+          shiny::conditionalPanel(
+            condition = paste0("input['", ns('analysis'), "'] == 'coxp'"),
+            shiny::selectInput(
+              ns("var_time"),
+              label = "Time variable",
+              choices = varnames
+            )
+          ),
+          shiny::conditionalPanel(
+            condition = paste0("input['", ns('analysis'), "'] == 'lm' ||  input['", ns('analysis'), "'] == 'glm' ||  input['", ns('analysis'), "'] == 'coxp'"),
             shiny::textAreaInput(
               ns("var_explanatory"),
               label = "Explanatory variables"
@@ -1338,19 +1341,15 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
           
           #----- UNCOMMENT TO ADD NULL MODEL SELECTION CAPABILITY ---------------
           shiny::conditionalPanel(
-            
-            condition = paste0("input", ns('analysis'), "'] == 'lm'"),
-            
-            {
-              list(
-                shiny::textAreaInput(
-                  ns("null_var_explanatory"),
-                  label = "Null explanatory variables",
-                  value = "1"
-                ),
-                shiny::helpText("Null model used to compute R^2 and F-test")
-              )
-            }
+            condition = paste0("input['", ns('analysis'), "'] == 'lm'"),
+            list(
+              shiny::textAreaInput(
+                ns("null_var_explanatory"),
+                label = "Null explanatory variables",
+                value = "1"
+              ),
+              shiny::helpText("Null model used to compute R^2 and F-test")
+            )
           ),
           
           shiny::actionButton(ns("analyze"), "Run federated analysis")
@@ -1684,18 +1683,23 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         if(!globalValues$showAnalysis || !is.analysis.ready())
           return(NULL)
         
-        family <- shiny::isolate({
-          if( is.analysis.ready()
-              && !is.null(input$var_explanatory) && input$var_explanatory != '' ){
-            if( input$analysis == 'lm' )
-              'gaussian'
-            else
-              input$familyFunction
-          }
-        })
+        if(input$analysis == 'lm' || input$analysis == 'glm'){
+          family <- shiny::isolate({
+            if( is.analysis.ready()
+                && !is.null(input$var_explanatory) && input$var_explanatory != '' ){
+              if( input$analysis == 'lm' )
+                'gaussian'
+              else
+                input$familyFunction
+            }
+          })
         
-        cat(paste0(Sys.time(),"  ","User ",globalValues$username," is building a linear regression model: ", paste0(input$var_target, ' ~ ', input$var_explanatory, "'", " family '", family, "' link '", available_glm_models[family],"'"), "\n"), file=LOG_FILE, append=TRUE)
-        shiny::h4(paste0("Evaluated model '", paste0(input$var_target, ' ~ ', input$var_explanatory, "'", " family '", family, "' link '", available_glm_models[family],"'")))
+          cat(paste0(Sys.time(),"  ","User ",globalValues$username," is building a linear regression model: ", paste0(input$var_target, ' ~ ', input$var_explanatory, "'", " family '", family, "' link '", available_glm_models[family],"'"), "\n"), file=LOG_FILE, append=TRUE)
+          shiny::h4(paste0("Evaluated model '", paste0(input$var_target, ' ~ ', input$var_explanatory, "'", " family '", family, "' link '", available_glm_models[family],"'")))
+        }else{
+          cat(paste0(Sys.time(),"  ","User ",globalValues$username," is building a cox model: ", paste0(input$var_target, ' ~ ', input$var_explanatory, "'")), file=LOG_FILE, append=TRUE)
+          shiny::h4(paste0("Evaluated cox model '", paste0(input$var_target, ' ~ ', input$var_explanatory, "'")))
+        }
       })
       
       output$modelSummary <- shiny::renderUI({
@@ -1703,62 +1707,105 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         if(!globalValues$showAnalysis || !is.analysis.ready())
           return(NULL)
         
-        htm <- shiny::isolate({
-          if( !is.null(input$var_explanatory) && input$var_explanatory != '' 
-              && is.analysis.ready() ){
+        if(input$analysis == 'lm' || input$analysis == 'glm'){
+          htm <- shiny::isolate({
+            if( !is.null(input$var_explanatory) && input$var_explanatory != '' 
+                && is.analysis.ready() ){
+              tryCatch({
+                #o <- get.ds.login()
+                mod <- get.ds.glm.full.model()
+                
+                if( is.null(mod) )
+                  return(shiny::HTML(paste0('<div style="color:red;">Error evaluating model: Did not converge after ', glm_max_iterations, ' iterations</div>')))
+                
+                nmod <- get.ds.glm.null.model()
+                #smod <- summary(mod)
+                # === NB THIS HOLDS ONLY FOR GLM WITH GAUSSIAN(IDENTITY) ===
+                if( input$analysis == 'lm' ){
+                  R2df <- get.R2.gaussian.glm(mod, nmod)
+                  Fdf <- get.F.gaussian.glm(mod, nmod)
+                  NullDev <- paste0("Null deviance: ", round(nmod$dev,2) , ' on ', nmod$df, " degrees of freedom<br/>")
+                  Rstring <- paste0("<br/>Multiple R-squared:  ",round(R2df$R2[1],4),"	Adjusted R-squared:  ", round(R2df$R2adj[1],4), "<br/>")
+                  Fstring <- paste0("F-statistic: ", round(Fdf$Fval,4), " on ", Fdf$Fdf1 ," and ", Fdf$Fdf2, " DF,  p-value: ", round(Fdf$Ftest,4))
+                }else{
+                  NullDev <- ""
+                  Rstring <- ""
+                  Fstring <- ""
+                }
+                shiny::HTML(paste0("<p>",
+                                   NullDev,
+                                   "Residual deviance: ", round(mod$dev,2) , ' on ', mod$df, " degrees of freedom",
+                                   #            "AIC: ", round(smod$aic,4), 
+                                   Rstring, 
+                                   Fstring,
+                                   "</p>"))
+                
+              }, error = function(e) {
+                errs <- DSI::datashield.errors();
+                if( is.null(errs) ){
+                  shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', errs ,'\'</div>'))
+                  cat(paste0(Sys.time()," ", errs,'\n'), file=LOG_FILE, append=TRUE)
+                }else{
+                  shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', e ,'\'</div>'))
+                  cat(paste0(Sys.time()," ", e,'\n'), file=LOG_FILE, append=TRUE)
+                }
+              },
+              warning=function(cond){
+                shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', cond ,'\'</div>'))
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
+            }
+          })
+          return(htm)
+        }else{
+          return(shiny::plotOutput(ns("analysisPlot")))
+        }
+        
+      })
+      
+      output$analysisPlot <- shiny::renderPlot({
+        if(!globalValues$showAnalysis || !is.load.ready() || !is.analysis.ready())
+          return(NULL)
+        
+        o <- get.ds.login()
+        vars <- get.ds.project.table.variables()
+        # do not take dependency on these objects
+        shiny::isolate({
+          if ( input$analysis == 'coxp' ) {
+            input$var_time
+            input$var_target
+            input$var_explanatory
+            get.vars.as.numeric(o, 'D', 'D.num', invars, vars);
+            model_vars <- get.model.vars(o, vars, , , input$analysis, input$familyFunction)
+            time_var <- get.var.as.numeric(o, vars, )
             tryCatch({
-              #o <- get.ds.login()
-              mod <- get.ds.glm.full.model()
-              
-              if( is.null(mod) )
-                return(shiny::HTML(paste0('<div style="color:red;">Error evaluating model: Did not converge after ', glm_max_iterations, ' iterations</div>')))
-              
-              nmod <- get.ds.glm.null.model()
-              #smod <- summary(mod)
-              # === NB THIS HOLDS ONLY FOR GLM WITH GAUSSIAN(IDENTITY) ===
-              if( input$analysis == 'lm' ){
-                R2df <- get.R2.gaussian.glm(mod, nmod)
-                Fdf <- get.F.gaussian.glm(mod, nmod)
-                NullDev <- paste0("Null deviance: ", round(nmod$dev,2) , ' on ', nmod$df, " degrees of freedom<br/>")
-                Rstring <- paste0("<br/>Multiple R-squared:  ",round(R2df$R2[1],4),"	Adjusted R-squared:  ", round(R2df$R2adj[1],4), "<br/>")
-                Fstring <- paste0("F-statistic: ", round(Fdf$Fval,4), " on ", Fdf$Fdf1 ," and ", Fdf$Fdf2, " DF,  p-value: ", round(Fdf$Ftest,4))
-              }else{
-                NullDev <- ""
-                Rstring <- ""
-                Fstring <- ""
-              }
-              shiny::HTML(paste0("<p>",
-                                 NullDev,
-                                 "Residual deviance: ", round(mod$dev,2) , ' on ', mod$df, " degrees of freedom",
-                                 #            "AIC: ", round(smod$aic,4), 
-                                 Rstring, 
-                                 Fstring,
-                                 "</p>"))
-              
-            }, error = function(e) {
-              errs <- DSI::datashield.errors();
-              if( is.null(errs) ){
-                shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', errs ,'\'</div>'))
-                cat(paste0(Sys.time()," ", errs,'\n'), file=LOG_FILE, append=TRUE)
-              }else{
-                shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', e ,'\'</div>'))
-                cat(paste0(Sys.time()," ", e,'\n'), file=LOG_FILE, append=TRUE)
-              }
+              output <- paste0("survival::Surv(",time_var,", ",model_vars$output,")")
+              formula <- paste0(output," ~ ", model_vars$input)
+              print(formula)
+              cox.res <- dsSwissKnifeClient::dssCoxph(formula=formula,
+                                                      data='D.num',
+                                                      datasources=o)
+              print(cox.res)
+              plot(cox.res$server1$fit, conf.int = TRUE, col = c('blue', 'red'))
+            },
+            error=function(cond){
+              errs <- DSI::datashield.errors()
+              if( is.null(errs) )
+                stop(cond)
+              else
+                stop(errs)
             },
             warning=function(cond){
-              shiny::HTML(paste0('<div style="color:red;">Error evaluating model: \'', cond ,'\'</div>'))
               cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
             })
           }
         })
-        
-        return(htm)
       })
       
       # lm/glm coefficients
       output$modelCoefficients <- shiny::renderTable({
         # take dependency on button, execute something only if his "clicked" value is greater or equal to 1
-        if(!globalValues$showAnalysis)
+        if(!globalValues$showAnalysis || input$analysis == 'coxp')
           return(NULL)
         
         tbl <- shiny::isolate({
@@ -1970,14 +2017,12 @@ get.model.vars <- function(o, vars, input, output, analysisType, familyFunction)
 }
 
 get.model.output.var <- function(output, analysisType, familyFunction, vars, o){
-  if(    analysisType == 'lm'
-         || familyFunction == 'poisson'){
-    # if factorial, convert it to numeric otherwise we cannot apply family gaussian
-    output_var <- get.var.as.numeric(o, vars, output)
-  }else if(familyFunction == 'binomial'){
+  if((analysisType == 'lm' || analysisType == 'glm') && familyFunction == 'binomial'){
     output_var <- get.var.as.factor(o, vars, output)
   }else
-    output_var <- paste0("D$",output)
+    # if factorial, convert it to numeric otherwise we cannot apply family gaussian
+    output_var <- get.var.as.numeric(o, vars, output)
+  #output_var <- paste0("D$",output)
 }
 
 get.input.named.vars <- function(vars){
