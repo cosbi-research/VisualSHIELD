@@ -1581,7 +1581,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                 graphics::par(col.main="white", col.lab="white", mfrow = c(length(plots),1) )
                 # we can plot the results of the aggr function for each node:
                 for(p in plots){
-                  graphics::plot(p)
+                  plot(p)
                 }
               },
               error=function(cond){
@@ -1757,35 +1757,81 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
           })
           return(htm)
         }else{
-          return(shiny::plotOutput(ns("analysisPlot")))
+          return(list(
+            shiny::plotOutput(ns("analysisPlot")),
+            shiny::uiOutput(outputId = ns("analysisSummary"))
+            ))
         }
         
       })
       
-      output$analysisPlot <- shiny::renderPlot({
+      get.ds.cox.full.model <- reactive({
         if(!globalValues$showAnalysis || !is.load.ready() || !is.analysis.ready())
           return(NULL)
         
         o <- get.ds.login()
         vars <- get.ds.project.table.variables()
+        
+        shiny::isolate({
+          model_vars <- get.model.vars(o, vars, input$var_explanatory, input$var_target, input$analysis, input$familyFunction)
+          time_var <- get.var.as.numeric(o, vars, input$var_time)
+          output <- paste0("survival::Surv(",time_var,", ",model_vars$output,")")
+          formula <- paste0(output," ~ ", model_vars$input)
+          cox.res <- dsSwissKnifeClient::dssCoxph(formula=formula,
+                                                  data='D',
+                                                  datasources=o)
+          cox.res
+        })
+        
+      })
+
+      output$analysisSummary <- shiny::renderUI({
+        if(!globalValues$showAnalysis || !is.load.ready() || !is.analysis.ready())
+          return(NULL)
+        
+        o <- get.ds.login()
+        elems <- shiny::isolate({
+          if ( input$analysis == 'coxp' ) {
+            tryCatch({
+              cox.res <- get.ds.cox.full.model()
+              
+              elems <- lapply(names(o), function(serv){
+                shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(summary(cox.res[[serv]]$model)), collapse="\n") ,'</pre>'))
+              })
+            },
+            error=function(cond){
+              errs <- DSI::datashield.errors()
+              if( is.null(errs) )
+                stop(cond)
+              else
+                stop(errs)
+            },
+            warning=function(cond){
+              cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+            })
+            
+            return(elems)
+          }
+          
+          return(NULL)
+        })
+        print(elems)
+        return(elems)
+      })
+      
+    output$analysisPlot <- shiny::renderPlot({
+        if(!globalValues$showAnalysis || !is.load.ready() || !is.analysis.ready())
+          return(NULL)
+        
+        o <- get.ds.login()
         # do not take dependency on these objects
         shiny::isolate({
           if ( input$analysis == 'coxp' ) {
-            #input$var_time
-            #input$var_target
-            #input$var_explanatory
-            #get.vars.as.numeric(o, 'D', 'D.num', invars, vars);
-            model_vars <- get.model.vars(o, vars, input$var_explanatory, input$var_target, input$analysis, input$familyFunction)
-            time_var <- get.var.as.numeric(o, vars, input$var_time)
             tryCatch({
-              output <- paste0("survival::Surv(",time_var,", ",model_vars$output,")")
-              formula <- paste0(output," ~ ", model_vars$input)
-              cox.res <- dsSwissKnifeClient::dssCoxph(formula=formula,
-                                                      data='D',
-                                                      datasources=o)
+              cox.res <- get.ds.cox.full.model()
               graphics::par(col.main="white", col.lab="white", mfrow = c(length(names(o)),1) )
               for( serv in names(o) ){
-                graphics::plot(cox.res[[serv]]$fit, conf.int = TRUE, col = c('blue', 'red'))
+                plot(cox.res[[serv]]$fit, conf.int = TRUE, col = c('blue', 'red'))
               }
             },
             error=function(cond){
@@ -1802,8 +1848,8 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         })
       })
       
-      # lm/glm coefficients
-      output$modelCoefficients <- shiny::renderTable({
+    # lm/glm coefficients
+    output$modelCoefficients <- shiny::renderTable({
         # take dependency on button, execute something only if his "clicked" value is greater or equal to 1
         if(!globalValues$showAnalysis || input$analysis == 'coxp')
           return(NULL)
