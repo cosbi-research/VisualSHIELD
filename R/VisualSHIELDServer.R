@@ -1771,21 +1771,22 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         # do not take dependency on these objects
         shiny::isolate({
           if ( input$analysis == 'coxp' ) {
-            input$var_time
-            input$var_target
-            input$var_explanatory
-            get.vars.as.numeric(o, 'D', 'D.num', invars, vars);
-            model_vars <- get.model.vars(o, vars, , , input$analysis, input$familyFunction)
-            time_var <- get.var.as.numeric(o, vars, )
+            #input$var_time
+            #input$var_target
+            #input$var_explanatory
+            #get.vars.as.numeric(o, 'D', 'D.num', invars, vars);
+            model_vars <- get.model.vars(o, vars, input$var_explanatory, input$var_target, input$analysis, input$familyFunction)
+            time_var <- get.var.as.numeric(o, vars, input$var_time)
             tryCatch({
               output <- paste0("survival::Surv(",time_var,", ",model_vars$output,")")
               formula <- paste0(output," ~ ", model_vars$input)
-              print(formula)
               cox.res <- dsSwissKnifeClient::dssCoxph(formula=formula,
-                                                      data='D.num',
+                                                      data='D',
                                                       datasources=o)
-              print(cox.res)
-              plot(cox.res$server1$fit, conf.int = TRUE, col = c('blue', 'red'))
+              graphics::par(col.main="white", col.lab="white", mfrow = c(length(names(o)),1) )
+              for( serv in names(o) ){
+                graphics::plot(cox.res[[serv]]$fit, conf.int = TRUE, col = c('blue', 'red'))
+              }
             },
             error=function(cond){
               errs <- DSI::datashield.errors()
