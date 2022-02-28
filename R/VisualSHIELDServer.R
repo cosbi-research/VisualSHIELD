@@ -1163,7 +1163,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               )
             ), 
             shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"'] == 'boxplot' || input['",ns('plotType'),"'] == 'vim'"),
+              condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
               
               shiny::selectInput(ns("vars_x"), "Variates",
                                  choices=varnames,
@@ -1575,10 +1575,9 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               })
             } else if ( input$plotType == "vim") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing NA imputation (VIM) on ", input$vars_x,"\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', input$vars_x, vars);
               
               tryCatch({
-                plots <- dsSwissKnifeClient::dssVIM('aggr',data='D.num', newobj = NULL, datasources=o)
+                plots <- dsSwissKnifeClient::dssVIM('aggr',data='D', newobj = NULL, datasources=o)
                 graphics::par(col.main="white", col.lab="white", mfrow = c(length(plots),1) )
                 # we can plot the results of the aggr function for each node:
                 for(p in plots){
