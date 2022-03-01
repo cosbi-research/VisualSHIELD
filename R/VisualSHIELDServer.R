@@ -1792,11 +1792,13 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
           return(NULL)
         
         o <- get.ds.login()
-        elems <- shiny::isolate({
+        
+        shiny::isolate({
+          elems<-NULL
+          
           if ( input$analysis == 'coxp' ) {
             tryCatch({
               cox.res <- get.ds.cox.full.model()
-              
               elems <- lapply(names(o), function(serv){
                 shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(summary(cox.res[[serv]]$model)), collapse="\n") ,'</pre>'))
               })
@@ -1811,14 +1813,10 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             warning=function(cond){
               cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
             })
-            
-            return(elems)
           }
           
-          return(NULL)
+          return(elems)
         })
-        print(elems)
-        return(elems)
       })
       
     output$analysisPlot <- shiny::renderPlot({
