@@ -825,7 +825,11 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
       globalValues$serversLoaded <- FALSE
       
       render.project.combo <- function(prjs, servName){
-        ch_prj <- c("na", levels(prjs$name))
+        if(is.factor(prjs$name))
+          ch_prj <- c("na", levels(prjs$name))
+        else
+          ch_prj <- c("na", prjs$name)
+        
         if( length(ch_prj) > 1 )
           names(ch_prj) <- c( "[Select an OPAL project]", ch_prj[2:length(ch_prj)] )
         else
