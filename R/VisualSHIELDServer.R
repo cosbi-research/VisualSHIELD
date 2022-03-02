@@ -1638,7 +1638,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
                 dsSwissKnifeClient::biplot.dssPrincomp(princomp$global,
                                                        type="combine",
                                                        draw.arrows = T,
-                                                       levels = 'Variables_km_clust3',
+                                                       levels = paste0('Variables_km_clust', input$knn_clusters),
                                                        datasources=o);
               },
               error=function(cond){
