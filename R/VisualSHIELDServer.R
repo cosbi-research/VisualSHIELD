@@ -1835,6 +1835,10 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
               cox.res <- get.ds.cox.full.model()
               graphics::par(col.main="white", col.lab="white", mfrow = c(length(names(o)),1) )
               for( serv in names(o) ){
+                # access model without reason, 
+                # silly, but otherwise for no reason sometimes plot doesn't work
+                # this is R magic, welcome
+                cox.res[[serv]]$model
                 plot(cox.res[[serv]]$fit, conf.int = TRUE, col = c('blue', 'red'))
               }
             },
