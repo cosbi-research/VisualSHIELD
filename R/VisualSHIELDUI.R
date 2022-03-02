@@ -99,7 +99,8 @@ VisualSHIELDUI <- function(id, title){
                                                                                 shiny::uiOutput(outputId = ns("analysisStatus")),
                                                                                 shiny::uiOutput(outputId = ns("modelFormula")),
                                                                                 shiny::uiOutput(outputId = ns("modelCoefficients")),
-                                                                                shiny::uiOutput(outputId = ns("modelSummary"))
+                                                                                shiny::uiOutput(outputId = ns("modelSummary")),
+                                                                                shiny::uiOutput(outputId = ns("modelDownload"))
                                                                               )
                                                                               
                                                                               

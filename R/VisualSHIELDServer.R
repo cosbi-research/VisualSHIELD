@@ -1392,6 +1392,36 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
         })
       })
       
+      output$downloadRegression <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          shiny::isolate({
+            regressiontype<-"RegressionModel"
+            if(input$analysis == 'lm'){
+              regressiontype<-'LM'
+            }else if(input$analysis == 'glm'){
+              regressiontype<-'GLM'
+            }else if(input$analysis == 'coxp'){
+              regressiontype<-'COX-ProportionalHazard'
+            }
+            paste0(paste(names(o), collapse="-"), "-",regressiontype,".rds")
+          })
+        },
+        content = function(file) {
+          shiny::isolate({
+            regressionmodel<-NULL
+            if(input$analysis == 'lm'){
+              regressionmodel<- get.ds.glm.full.model()
+            }else if(input$analysis == 'glm'){
+              regressionmodel<- get.ds.glm.full.model()
+            }else if(input$analysis == 'coxp'){
+              regressionmodel<- get.ds.cox.full.model()
+            }
+            saveRDS(regressionmodel, file=file)
+          })
+        }
+      )
+      
       output$downloadRFS <- shiny::downloadHandler(
         filename = function() {
           o <- get.ds.login()
@@ -1705,6 +1735,17 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
           cat(paste0(Sys.time(),"  ","User ",globalValues$username," is building a cox model: ", paste0(input$var_target, ' ~ ', input$var_explanatory, "'")), file=LOG_FILE, append=TRUE)
           shiny::h4(paste0("Evaluated cox model '", paste0(input$var_target, ' ~ ', input$var_explanatory, "'")))
         }
+      })
+      output$modelDownload <- shiny::renderUI({
+        # take dependency on button, execute something only if his "clicked" value is greater or equal to 1
+        if(!globalValues$showAnalysis || !is.analysis.ready())
+          return(NULL)
+      
+        shiny::isolate({
+          if(input$analysis == 'lm' || input$analysis == 'glm' || input$analysis == 'coxp'){
+            downloadButton(ns("downloadRegression"), "Download regression model as an RDS")
+          }
+        })
       })
       
       output$modelSummary <- shiny::renderUI({
