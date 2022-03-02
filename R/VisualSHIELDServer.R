@@ -1804,7 +1804,7 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             tryCatch({
               cox.res <- get.ds.cox.full.model()
               elems <- lapply(names(o), function(serv){
-                shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(summary(cox.res[[serv]]$model)), collapse="\n") ,'</pre>'))
+                shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(cox.res[[serv]]$model), collapse="\n") ,'</pre>'))
               })
             },
             error=function(cond){
