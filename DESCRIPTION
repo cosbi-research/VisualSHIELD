@@ -1,5 +1,5 @@
 Package: VisualSHIELD
-Title: Shiny module to seamlessly analyze Opal (https://www.obiba.org/pages/products/opal/) and dbNP (https://www.dbnp.org/) remote data through the privacy-aware DataSHIELD (https://www.datashield.ac.uk/) analysis package 
+Title: Shiny module to seamlessly analyze Opal (https://www.obiba.org/pages/products/opal/) remote data through the privacy-aware DataSHIELD (https://www.datashield.ac.uk/) analysis package 
 Version: 1.0
 Authors@R: 
     person(given = "Danilo",
@@ -9,7 +9,7 @@ Authors@R:
            comment = c(ORCID = "0000-0002-8427-4230"))
 Author: Danilo Tomasoni
 Maintainer: Danilo Tomasoni <tomasoni@cosbi.eu>
-Description: VisualSHIELD is an open-source R package and shiny module that builds on the study database Opal and the DataSHIELD library to perform federated statistical analyses. It provides a ready-to-use web app module that can be integrated in any custom shiny app, providing a high-level interface to access all the DataSHIELD functionalities, and more, from the web. This package contains a shiny module, that means that it can be used as a building block of any custom shiny app and allows to configure and invoke DataSHIELD and Opal, and to render as HTML the output of the analyses without writing R code. The module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. See 'example' for an example usage. It allows also to port dbNP data to Opal, in such a way that also dbNP data can be used in the analysis.
+Description: VisualSHIELD is an open-source R package and shiny module that builds on Opal and the DataSHIELD library to perform federated statistical analyses. It provides a ready-to-use web app module that can be integrated in any custom shiny app, providing a high-level interface to access all the DataSHIELD functionalities, and more, from the web. This package contains a shiny module, that means that it can be used as a building block of any custom shiny app and allows to configure and invoke DataSHIELD and Opal, and to render as HTML the output of the analyses without writing R code. The module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. See 'example' for an example usage.
 License: BSD_3_clause + file LICENSE
 Depends: R (>= 3.6.0)
 Imports: 
@@ -29,7 +29,6 @@ Suggests:
     randomForest,
     dsSwissKnifeClient,
     dsCOVclient,
-    PhenotypeDatabaseRClient,
     knitr,
     rmarkdown
 Encoding: UTF-8
