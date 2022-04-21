@@ -46,7 +46,7 @@
 #' })
 #' }
 
-VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max_iterations=30){
+VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="VisualSHIELD.log", glm_max_iterations=30){
   
 #  library(jsonlite)
 #  library(httr)
@@ -609,7 +609,13 @@ VisualSHIELDServer <- function(id, servers, LOG_FILE="VisualSHIELD.log", glm_max
             }
             return(classes)
           }
-          coltypes <- sapply( cols, get.col.types)
+          
+          if(!is.null(assume.columns.type))
+            coltypes <- sapply( cols, function(col) assume.columns.type)
+          else
+            # dynamically get the column type for every column (slow)
+            coltypes <- sapply( cols, get.col.types)
+          
           # select only first row, it is sufficient because all the rows are equal!
           # otherwise the check in get.col.types would have thrown an error
           if( !is.null(nrow(coltypes)) )
