@@ -111,7 +111,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           
           # this is needed to remember the previous selection 
           # after changing analysis type in the analysis tab
-          var_x<-var_y<-vars_x<-vars_y<-NULL
+          var_x<-var_y<-vars_x<-vars_y<-var_time<-NULL
           if(input$plotType == 'hist')
             var_x <- input$hist_var
           else if(input$plotType == 'boxplot')
@@ -130,8 +130,11 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           }else if(input$plotType == 'heatmap'){
             var_x <- input$heat_var_x
             var_y <- input$heat_var_y
+          }else if(input$plotType == 'analisys'){
+            var_x <- input$var_target
+            var_time <- input$var_time
           }
-          
+        
           if(!is.null(var_x))
             globalValues$old_var_x<-var_x 
           if(!is.null(var_y))
@@ -140,6 +143,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             globalValues$old_vars_x<-vars_x 
           if(!is.null(vars_y))
             globalValues$old_vars_y<-vars_y
+          if(!is.null(var_time))
+            globalValues$old_var_time<-var_time
         })
       })
       # === END on FLUSH
@@ -259,6 +264,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         input$y_measure
         input$size_measure
         input$box_vars
+        
 
         globalValues$showPlot <- FALSE
         globalValues$last_RFS <- NA
@@ -267,12 +273,13 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       
       shiny::observeEvent({
         input$plotType
+        input$analysis
       },{
         vars <- get.ds.project.table.variables()
         varnames <- get.input.named.vars(vars)
         
         # check if previous selection is applicable
-        old_var_x <- old_var_y <- old_vars_x <- old_vars_y <- NULL
+        old_var_x <- old_var_y <- old_vars_x <- old_vars_y <- old_var_time <- NULL
         if(!is.null(globalValues$old_var_x))
           old_var_x <- globalValues$old_var_x
         if(!is.null(globalValues$old_var_y))
@@ -281,6 +288,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           old_vars_x <- globalValues$old_vars_x
         if(!is.null(globalValues$old_vars_y))
           old_vars_y <- globalValues$old_vars_y
+        if(!is.null(globalValues$old_var_time))
+          old_var_time <- globalValues$old_var_time
         
         if(input$plotType == 'hist')
           updateSelectizeInput(session, 'hist_var', choices = varnames, selected=old_var_x, server = TRUE)
@@ -300,8 +309,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         }else if(input$plotType == 'heatmap'){
           updateSelectizeInput(session, 'heat_var_x', choices = varnames, selected=old_var_x, server = TRUE)
           updateSelectizeInput(session, 'heat_var_y', choices = varnames, selected=old_var_y, server = TRUE)
+        }else if(input$plotType == 'analisys'){
+          if(input$analysis == 'coxp')
+            updateSelectizeInput(session, 'var_time', choices = varnames, selected=old_var_time, server = TRUE)
+          else
+            updateSelectizeInput(session, 'var_target', choices = varnames, selected=old_var_x, server = TRUE)
         }
-        
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
       # if button clicked -> show TRUE
@@ -1374,7 +1387,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::selectInput(
               ns("var_target"),
               label = "Dependent variable",
-              choices = varnames
+              choices = NULL
             )
           ),
           shiny::conditionalPanel(
@@ -1382,7 +1395,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::selectInput(
               ns("var_time"),
               label = "Time variable",
-              choices = varnames
+              choices = NULL
             )
           ),
           shiny::conditionalPanel(
