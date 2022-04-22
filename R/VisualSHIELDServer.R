@@ -67,36 +67,6 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       
       # === URL PARSING AND DATABASE CONNECTION
       load.data.servers <- function(jdata){
-        #> str(jdata)
-        #List of 3
-        #$ username: chr "dtomasoni"
-        #$ email   : chr "danilo.tomasoni@cryptolab.net"
-        #$ servers :List of 2
-        #..$ :List of 2
-        #.. ..$ opal_server  :List of 7
-        #.. .. ..$ id         : chr "153"
-        #.. .. ..$ name       : chr "OpalRecas BARI"
-        #.. .. ..$ url        : chr "http://opal.cloud.ba.infn.it:8080"
-        #.. .. ..$ username   : chr "rosario.lombardo"
-        #.. .. ..$ password   : chr "XXXX"
-        #.. .. ..$ certificate: NULL
-        #.. .. ..$ private_key: NULL
-        #.. ..$ dashin_server: NULL
-        #..$ :List of 2
-        #.. ..$ opal_server  :List of 7
-        #.. .. ..$ id         : chr "154"
-        #.. .. ..$ name       : chr "TNO"
-        #.. .. ..$ url        : chr "http://msb1.hex.tno.nl"
-        #.. .. ..$ username   : chr "administrator"
-        #.. .. ..$ password   : chr "XXXX!"
-        #.. .. ..$ certificate: NULL
-        #.. .. ..$ private_key: NULL
-        #.. ..$ dashin_server:List of 4
-        #.. .. ..$ url     : chr "https://dashin.eu/interventionstudies-test/api/"
-        #.. .. ..$ username: chr "zefoteus"
-        #.. .. ..$ password: chr "XXXXXXXX"
-        #.. .. ..$ skey    : chr "XXXXX"
-        
         globalValues$username <- username <- jdata$username
         opalServers <- lapply(jdata$servers, function(server){ server$opal_server })
         dbnpServers <- lapply(jdata$servers, function(server){ if(is.null(server$dashin_server)) return(NULL); s <- server$dashin_server; s$id <- server$opal_server$id; s })
@@ -271,6 +241,38 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         globalValues$last_RFS <- NA
         globalValues$last_KNN <- NA
       })
+      
+      shiny::observeEvent({
+        input$plotType
+      },{
+        vars <- get.ds.project.table.variables()
+        varnames <- get.input.named.vars(vars)
+        
+        # check if previous selection is applicable
+        old_var_x <- NULL
+        old_var_y <- NULL
+        if( !is.null(globalValues$old_var_x) && globalValues$old_var_x %in% varnames )
+          old_var_x <- globalValues$old_var_x
+        if( !is.null(globalValues$old_var_y) && globalValues$old_var_y %in% varnames )
+          old_var_y <- globalValues$old_var_y
+  
+        
+        if(input$plotType == 'boxplot')
+          updateSelectizeInput(session, 'vars_x', choices = varnames, selected=old_var_x, server = TRUE)
+        else if(input$plotType == 'princomp')
+          updateSelectizeInput(session, 'knn_vars_x', choices = varnames, selected=old_var_x, server = TRUE)
+        else if(input$plotType == 'correlation'){
+          updateSelectizeInput(session, 'cca_vars_x', choices = varnames, selected=old_var_x, server = TRUE)
+          updateSelectizeInput(session, 'cca_vars_y', choices = varnames, selected=old_var_x, server = TRUE)
+        }else if(input$plotType == 'randomforest'){
+          updateSelectizeInput(session, 'var_y', choices = varnames, selected=old_var_x, server = TRUE)
+          updateSelectizeInput(session, 'vars', choices = varnames, selected=old_var_x, server = TRUE)
+        }else if(input$plotType == 'hist' || input$plotType == 'contour' || input$plotType == 'heatmap')
+          updateSelectizeInput(session, 'var_x', choices = varnames, selected=old_var_x, server = TRUE)
+        if(input$plotType == 'contour' || input$plotType == 'heatmap')
+          updateSelectizeInput(session, 'var_y', choices = varnames, selected=old_var_x, server = TRUE)
+        
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
       # if button clicked -> show TRUE
       shiny::observe({
@@ -1152,16 +1154,6 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         if ( !is.null(input$plotType) && is.analysis.ready() ) {
           # dataframe, rownames are the name of the variable
           # $type is the type of the variable
-          vars <- get.ds.project.table.variables()
-          varnames <- get.input.named.vars(vars)
-          
-          # check if previous selection is applicable
-          old_var_x <- NULL
-          old_var_y <- NULL
-          if( !is.null(globalValues$old_var_x) && globalValues$old_var_x %in% varnames )
-            old_var_x <- globalValues$old_var_x
-          if( !is.null(globalValues$old_var_y) && globalValues$old_var_y %in% varnames )
-            old_var_y <- globalValues$old_var_y
           
           list(
             shiny::conditionalPanel(
@@ -1177,16 +1169,16 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
               
-              shiny::selectInput(ns("vars_x"), "Variates",
-                                 choices=varnames,
+              shiny::selectizeInput(ns("vars_x"), "Variates",
+                                 choices=NULL,
                                  multiple=T
               )
             ),
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'princomp'"),
               
-              shiny::selectInput(ns("knn_vars_x"), "Variates",
-                                 choices=varnames,
+              shiny::selectizeInput(ns("knn_vars_x"), "Variates",
+                                 choices=NULL,
                                  multiple=T
               ),
               shiny::numericInput(ns("knn_clusters"),
@@ -1214,12 +1206,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
               
-              shiny::selectInput(ns("cca_vars_x"), "Variates X",
-                                 choices=varnames,
+              shiny::selectizeInput(ns("cca_vars_x"), "Variates X",
+                                 choices=NULL,
                                  multiple=T
               ),
-              shiny::selectInput(ns("cca_vars_y"), "Variates Y",
-                                 choices=varnames,
+              shiny::selectizeInput(ns("cca_vars_y"), "Variates Y",
+                                 choices=NULL,
                                  multiple=T
               ),
               shiny::numericInput(ns("cca_lambda1"),
@@ -1239,13 +1231,13 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             ),
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'randomforest'"),
-              shiny::selectInput(ns("var_y"),
+              shiny::selectizeInput(ns("var_y"),
                                  "Response factor",
-                                 varnames,
-                                 selected=old_var_y
+                                 NULL,
+                                 selected=NULL
               ),
-              shiny::selectInput(ns("vars"), "Classification variables",
-                                 choices=varnames,
+              shiny::selectizeInput(ns("vars"), "Classification variables",
+                                 choices=NULL,
                                  multiple=T
               ),
               shiny::selectInput(ns("x_measure"), "Importance plot X axis",
@@ -1283,8 +1275,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               shiny::selectInput(ns("var_x"),
                                "Data variable",
                                # filter varnames based on true/false value in fcols
-                               varnames,
-                               selected=old_var_x
+                               NULL,
+                               selected=NULL
               )
             ),
             shiny::conditionalPanel(
@@ -1292,13 +1284,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               
               shiny::selectInput(ns("var_y"),
                                  "Contrast variable",
-                                 varnames,
-                                 selected=old_var_y
+                                 NULL,
+                                 selected=NULL
               )
             ),
             shiny::actionButton(ns("plot"), "Run federated plot")
           )
-          
         }
       })
       
@@ -1932,7 +1923,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         
       })
       # === END ANALYSIS
-   })
+    })
 }
 
 
