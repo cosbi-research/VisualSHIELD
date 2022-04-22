@@ -106,20 +106,40 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       # so the value has changed at the selectizeInput but the UI is still not updated
       session$onFlush(once=FALSE, function(){
         shiny::isolate({ 
+          if(is.null(input$plotType))
+            return(NULL);
+          
           # this is needed to remember the previous selection 
           # after changing analysis type in the analysis tab
-          globalValues$old_var_x<-input$var_x 
-          globalValues$old_var_y<-input$var_y
+          var_x<-var_y<-vars_x<-vars_y<-NULL
+          if(input$plotType == 'hist')
+            var_x <- input$hist_var
+          else if(input$plotType == 'boxplot')
+            vars_x <- input$box_vars
+          else if(input$plotType == 'princomp')
+            vars_x <- input$knn_vars_x
+          else if(input$plotType == 'correlation'){
+            vars_x <- input$cca_vars_x
+            vars_y <- input$cca_vars_y
+          }else if(input$plotType == 'randomforest'){
+            var_y <- input$rf_var_y
+            vars_x <- input$rf_vars
+          }else if(input$plotType == 'contour'){
+            var_x <- input$contour_var_x
+            var_y <- input$contour_var_y
+          }else if(input$plotType == 'heatmap'){
+            var_x <- input$heat_var_x
+            var_y <- input$heat_var_y
+          }
           
-          #  globalValues$old_projs <- list()
-          #  lapply(get.opal.servers()$server, function(serv) {
-          #    globalValues$old_projs[serv] <- input[[paste0('dsProjectList', serv)]]
-          # })
-          
-          #  globalValues$old_tbls <- list()
-          #  lapply(get.opal.servers()$server, function(serv) {
-          #    globalValues$old_projs[serv] <- input[[paste0('dsProjectTablesList', serv)]]
-          #  })
+          if(!is.null(var_x))
+            globalValues$old_var_x<-var_x 
+          if(!is.null(var_y))
+            globalValues$old_var_y<-var_y
+          if(!is.null(vars_x))
+            globalValues$old_vars_x<-vars_x 
+          if(!is.null(vars_y))
+            globalValues$old_vars_y<-vars_y
         })
       })
       # === END on FLUSH
@@ -218,16 +238,14 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       # if inputs change -> show FALSE
       shiny::observe({
         #dependencies
-        input$var_y
-        input$var_x
         input$plotType
-        input$intervals
-        input$vars
-        input$x_measure
-        input$y_measure
-        input$size_measure
-        input$vars_x
-        input$vars_y
+        input$hist_var
+        input$heat_var_x
+        input$heat_var_y
+        input$contour_var_x
+        input$contour_var_y
+        input$rf_vars
+        input$rf_var_y
         input$cca_vars_x
         input$cca_vars_y
         input$cca_lambda1
@@ -236,7 +254,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         input$knn_clusters
         input$knn_max_iter
         input$knn_start
-        
+        input$intervals
+        input$x_measure
+        input$y_measure
+        input$size_measure
+        input$box_vars
+
         globalValues$showPlot <- FALSE
         globalValues$last_RFS <- NA
         globalValues$last_KNN <- NA
@@ -249,28 +272,35 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         varnames <- get.input.named.vars(vars)
         
         # check if previous selection is applicable
-        old_var_x <- NULL
-        old_var_y <- NULL
-        if( !is.null(globalValues$old_var_x) && globalValues$old_var_x %in% varnames )
+        old_var_x <- old_var_y <- old_vars_x <- old_vars_y <- NULL
+        if(!is.null(globalValues$old_var_x))
           old_var_x <- globalValues$old_var_x
-        if( !is.null(globalValues$old_var_y) && globalValues$old_var_y %in% varnames )
+        if(!is.null(globalValues$old_var_y))
           old_var_y <- globalValues$old_var_y
-  
+        if(!is.null(globalValues$old_vars_x))
+          old_vars_x <- globalValues$old_vars_x
+        if(!is.null(globalValues$old_vars_y))
+          old_vars_y <- globalValues$old_vars_y
         
-        if(input$plotType == 'boxplot')
-          updateSelectizeInput(session, 'vars_x', choices = varnames, selected=old_var_x, server = TRUE)
+        if(input$plotType == 'hist')
+          updateSelectizeInput(session, 'hist_var', choices = varnames, selected=old_var_x, server = TRUE)
+        else if(input$plotType == 'boxplot')
+          updateSelectizeInput(session, 'box_vars', choices = varnames, selected=old_vars_x, server = TRUE)
         else if(input$plotType == 'princomp')
-          updateSelectizeInput(session, 'knn_vars_x', choices = varnames, selected=old_var_x, server = TRUE)
+          updateSelectizeInput(session, 'knn_vars_x', choices = varnames, selected=old_vars_x, server = TRUE)
         else if(input$plotType == 'correlation'){
-          updateSelectizeInput(session, 'cca_vars_x', choices = varnames, selected=old_var_x, server = TRUE)
-          updateSelectizeInput(session, 'cca_vars_y', choices = varnames, selected=old_var_x, server = TRUE)
+          updateSelectizeInput(session, 'cca_vars_x', choices = varnames, selected=old_vars_x, server = TRUE)
+          updateSelectizeInput(session, 'cca_vars_y', choices = varnames, selected=old_vars_y, server = TRUE)
         }else if(input$plotType == 'randomforest'){
-          updateSelectizeInput(session, 'var_y', choices = varnames, selected=old_var_x, server = TRUE)
-          updateSelectizeInput(session, 'vars', choices = varnames, selected=old_var_x, server = TRUE)
-        }else if(input$plotType == 'hist' || input$plotType == 'contour' || input$plotType == 'heatmap')
-          updateSelectizeInput(session, 'var_x', choices = varnames, selected=old_var_x, server = TRUE)
-        if(input$plotType == 'contour' || input$plotType == 'heatmap')
-          updateSelectizeInput(session, 'var_y', choices = varnames, selected=old_var_x, server = TRUE)
+          updateSelectizeInput(session, 'rf_var_y', choices = varnames, selected=old_var_y, server = TRUE)
+          updateSelectizeInput(session, 'rf_vars', choices = varnames, selected=old_vars_x, server = TRUE)
+        }else if(input$plotType == 'contour'){
+          updateSelectizeInput(session, 'contour_var_x', choices = varnames, selected=old_var_x, server = TRUE)
+          updateSelectizeInput(session, 'contour_var_y', choices = varnames, selected=old_var_y, server = TRUE)
+        }else if(input$plotType == 'heatmap'){
+          updateSelectizeInput(session, 'heat_var_x', choices = varnames, selected=old_var_x, server = TRUE)
+          updateSelectizeInput(session, 'heat_var_y', choices = varnames, selected=old_var_y, server = TRUE)
+        }
         
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
@@ -1169,7 +1199,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
               
-              shiny::selectizeInput(ns("vars_x"), "Variates",
+              shiny::selectizeInput(ns("box_vars"), "Variates",
                                  choices=NULL,
                                  multiple=T
               )
@@ -1231,12 +1261,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             ),
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'randomforest'"),
-              shiny::selectizeInput(ns("var_y"),
+              shiny::selectizeInput(ns("rf_var_y"),
                                  "Response factor",
                                  NULL,
                                  selected=NULL
               ),
-              shiny::selectizeInput(ns("vars"), "Classification variables",
+              shiny::selectizeInput(ns("rf_vars"), "Classification variables",
                                  choices=NULL,
                                  multiple=T
               ),
@@ -1270,28 +1300,49 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
 	      shiny::HTML("For further informations see <a href=\"https://modeloriented.github.io/randomForestExplainer/articles/randomForestExplainer.html#multi-way-importance-plot-1\" target=\"_blank\">Multi-way importance plot</a>")
             ),
             shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"']  == 'hist' || input['",ns('plotType'),"']  == 'contour' || input['",ns('plotType'),"'] == 'heatmap'"),
+              condition = paste0("input['",ns('plotType'),"']  == 'hist'"),
               
-              shiny::selectInput(ns("var_x"),
+              shiny::selectInput(ns("hist_var"),
                                "Data variable",
                                # filter varnames based on true/false value in fcols
                                NULL,
                                selected=NULL
               )
             ),
-            shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"']  == 'contour' || input['",ns('plotType'),"'] == 'heatmap'"),
-              
-              shiny::selectInput(ns("var_y"),
-                                 "Contrast variable",
-                                 NULL,
-                                 selected=NULL
-              )
-            ),
-            shiny::actionButton(ns("plot"), "Run federated plot")
-          )
-        }
-      })
+	      shiny::conditionalPanel(
+	        condition = paste0("input['",ns('plotType'),"']  == 'contour'"),
+	        
+	        shiny::selectInput(ns("contour_var_x"),
+	                           "Data variable",
+	                           # filter varnames based on true/false value in fcols
+	                           NULL,
+	                           selected=NULL
+	        ),
+	        shiny::selectInput(ns("contour_var_y"),
+	                           "Contrast variable",
+	                           NULL,
+	                           selected=NULL
+	        )
+	      ),
+	      shiny::conditionalPanel(
+	        condition = paste0("input['",ns('plotType'),"'] == 'heatmap'"),
+	        
+	        shiny::selectInput(ns("heat_var_x"),
+	                           "Data variable",
+	                           # filter varnames based on true/false value in fcols
+	                           NULL,
+	                           selected=NULL
+	        ),
+	        shiny::selectInput(ns("heat_var_y"),
+	                           "Contrast variable",
+	                           NULL,
+	                           selected=NULL
+	        )
+	      ),
+        shiny::actionButton(ns("plot"), "Run federated plot")
+      )
+      }
+    })
       
       output$varAnalysis <- shiny::renderUI({
         # dataframe, rownames are the name of the variable
@@ -1446,12 +1497,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         o <- get.ds.login()
         # do not take dependency on these objects
         shiny::isolate({
-          if ( !is.null(input$plotType) && !is.null(input$var_x) && input$plotType != 'analisys' ) {
+          if ( !is.null(input$plotType) && !is.null(input$hist_var) && input$plotType != 'analisys' ) {
             vars <- get.ds.project.table.variables()
 
             if ( input$plotType == "hist") {
-              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," with an histogram plot", "\n"), file=LOG_FILE, append=TRUE)
-              x_var <- get.var.as.numeric(o, vars, input$var_x)
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$hist_var," with an histogram plot", "\n"), file=LOG_FILE, append=TRUE)
+              x_var <- get.var.as.numeric(o, vars, input$hist_var)
               
               h  <- tryCatch({
                 dsBaseClient::ds.histogram(x = x_var, num.breaks = input$intervals, 
@@ -1522,9 +1573,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               #     )
               
             } else if ( input$plotType == "contour") {
-              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," against ", input$var_y," with an contour plot", "\n"), file=LOG_FILE, append=TRUE)
-              x_var <- get.var.as.numeric(o, vars, input$var_x)
-              y_var <- get.var.as.numeric(o, vars, input$var_y)
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$contour_var_x," against ", input$contour_var_y," with an contour plot", "\n"), file=LOG_FILE, append=TRUE)
+              x_var <- get.var.as.numeric(o, vars, input$contour_var_x)
+              y_var <- get.var.as.numeric(o, vars, input$contour_var_y)
               
               # delete unclear labels and title
               graphics::par(col.main="white", col.lab="white")
@@ -1550,16 +1601,16 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               
               graphics::title(main = ifelse(input$title != "",
                                             input$title,
-                                            paste("Correlation of", input$var_x, "and", input$var_y)),
+                                            paste("Correlation of", input$contour_var_x, "and", input$contour_var_y)),
                               col.main="black"
               )
-              graphics::mtext(input$var_x, side=1, line=3, col = "black")
-              graphics::mtext(input$var_y, side=2, line=3, col = "black")
+              graphics::mtext(input$contour_var_x, side=1, line=3, col = "black")
+              graphics::mtext(input$contour_var_y, side=2, line=3, col = "black")
               
             } else if ( input$plotType == "heatmap") {
-              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$var_x," against ", input$var_y," with an heatmap plot", "\n"), file=LOG_FILE, append=TRUE)
-              y_var <- get.var.as.numeric(o, vars, input$var_y)
-              x_var <- get.var.as.numeric(o, vars, input$var_x)
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$heat_var_x," against ", input$heat_var_y," with an heatmap plot", "\n"), file=LOG_FILE, append=TRUE)
+              y_var <- get.var.as.numeric(o, vars, input$heat_var_y)
+              x_var <- get.var.as.numeric(o, vars, input$heat_var_x)
               
               graphics::par(col.main="white", col.lab="white")
               tryCatch({
@@ -1583,18 +1634,18 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               
               graphics::title(main = ifelse(input$title != "",
                                             input$title,
-                                            paste("Heatmap of", input$var_x, "and", input$var_y)),
+                                            paste("Heatmap of", input$heat_var_x, "and", input$heat_var_y)),
                               col.main="black"
               )
-              graphics::mtext(input$var_x, side=1, line=3, col = "black")
-              graphics::mtext(input$var_y, side=2, line=3, col = "black")
+              graphics::mtext(input$heat_var_x, side=1, line=3, col = "black")
+              graphics::mtext(input$heat_var_y, side=2, line=3, col = "black")
               
             } else if ( input$plotType == "boxplot") {
-              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing box-plot on ", input$vars_x,"\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', input$vars_x, vars);
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing box-plot on ", input$box_vars,"\n"), file=LOG_FILE, append=TRUE)
+              get.vars.as.numeric(o, 'D', 'D.num', input$box_vars, vars);
               
               tryCatch({
-                dsBaseClient::ds.boxPlot(datasources=o, x='D.num', variables=input$vars_x, type="pooled")
+                dsBaseClient::ds.boxPlot(datasources=o, x='D.num', variables=input$box_vars, type="pooled")
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
@@ -1607,7 +1658,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                 cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
               })
             } else if ( input$plotType == "vim") {
-              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing NA imputation (VIM) on ", input$vars_x,"\n"), file=LOG_FILE, append=TRUE)
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing NA imputation (VIM) on ", input$vim_vars,"\n"), file=LOG_FILE, append=TRUE)
               
               tryCatch({
                 plots <- dsSwissKnifeClient::dssVIM('aggr',data='D', newobj = NULL, datasources=o)
@@ -1629,7 +1680,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               })
               
             } else if ( input$plotType == "correlation") {
-              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$var_x," against ", input$var_y, "\n"), file=LOG_FILE, append=TRUE)
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$cca_vars_x," against ", input$cca_vars_y, "\n"), file=LOG_FILE, append=TRUE)
               get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars);
 
               tryCatch({
@@ -1680,9 +1731,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               })
             }else if(input$plotType == "randomforest"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', c(input$var_y, input$vars), vars);
+              get.vars.as.numeric(o, 'D', 'D.num', c(input$rf_var_y, input$rf_vars), vars);
               tryCatch({
-                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$var_y, expl_vars=input$vars, localImp=T),
+                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$rf_var_y, expl_vars=input$rf_vars, localImp=T),
                                                             async=F, datasources=o);
                 globalValues$last_RFS <- rfs;
                 #min_depth_frame <- randomForestExplainer::min_depth_distribution(rfs[[1]])
