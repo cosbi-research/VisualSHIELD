@@ -315,7 +315,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           else
             updateSelectizeInput(session, 'var_target', choices = varnames, selected=old_var_x, server = TRUE)
         }
-      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      }, ignoreInit = TRUE, ignoreNULL = FALSE)
       
       # if button clicked -> show TRUE
       shiny::observe({
