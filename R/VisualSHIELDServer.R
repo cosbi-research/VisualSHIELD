@@ -1699,8 +1699,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               tryCatch({
                 res = dsCOVclient::dsrCCA(o, 'D.num', input$cca_vars_x, input$cca_vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 #res = dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
-                mixOmics::plotIndiv(res, ind.names = F,
-                                    legend = F, title = 'Federated Correlation Analysis (dsrCCA)')
+                dsCOVclient::dsPlotVar(res, title = 'Correlation circle plots from federated CCA')
+                #mixOmics::plotIndiv(res, ind.names = F,
+                #                    legend = F, title = 'Federated Correlation Analysis (dsrCCA)')
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
