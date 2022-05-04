@@ -324,6 +324,15 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         if( !is.null(input$plot) && input$plot )
           globalValues$showPlot <- TRUE
       })
+      
+      shiny::observe({
+        # first disable, enable only after load
+        vars <- get.ds.project.table.variables()
+        if( is.null(vars) )
+          shinyjs::disable("colsDownload")
+        else
+          shinyjs::enable("colsDownload")
+      })
       # === END OBSERVER
       # === REACTIVE
       # reactive block will be re-executed only on input change
@@ -1102,7 +1111,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       
       output$dsActions <- shiny::renderUI({
         if( is.load.ready() )
-          btn <- shiny::actionButton(ns("load"), "Setup remote data tables")
+          btn <- shiny::fluidRow(
+            shiny::column(width=3,
+                          shiny::actionButton(ns("load"), "Setup remote data tables")),
+            shiny::column(width=3,
+                          shiny::downloadButton(ns("colsDownload"), "Download features"))
+          )
         else
           btn <-shiny::helpText("Please select at least a data table above before proceeding.")
         
@@ -1448,9 +1462,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           return(shiny::tagList(shiny::span("")))
         shiny::isolate({
           if ( input$plotType == "randomforest") {
-            downloadButton(ns("downloadRFS"), "Download Random Forests model as an RDS")
+            shiny::downloadButton(ns("downloadRFS"), "Download Random Forests model as an RDS")
           }else if ( input$plotType == "princomp") {
-              downloadButton(ns("downloadKNN"), "Download K-nearest neighbor model as an RDS")
+            shiny::downloadButton(ns("downloadKNN"), "Download K-nearest neighbor model as an RDS")
           }else{
             shiny::tagList(shiny::span(""))
           }
@@ -1487,6 +1501,17 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         }
       )
       
+      output$colsDownload <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          paste0(paste(names(o), collapse="-"), "-FeaturesList.txt")
+        },
+        content = function(file) {
+          vars <- get.ds.project.table.variables()
+          writeLines(row.names(vars), file)
+        }
+      )
+      
       output$downloadRFS <- shiny::downloadHandler(
         filename = function() {
           o <- get.ds.login()
@@ -1496,6 +1521,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           saveRDS(globalValues$last_RFS, file=file)
         }
       )
+      
       output$downloadKNN <- shiny::downloadHandler(
         filename = function() {
           o <- get.ds.login()
