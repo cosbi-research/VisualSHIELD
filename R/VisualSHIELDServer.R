@@ -310,7 +310,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           updateSelectizeInput(session, 'heat_var_x', choices = varnames, selected=old_var_x, server = TRUE)
           updateSelectizeInput(session, 'heat_var_y', choices = varnames, selected=old_var_y, server = TRUE)
         }else if(input$plotType == 'analisys'){
-          if(input$analysis == 'coxp')
+          if(is.null(input$analysis)){
+            # do nothing
+          }else if(input$analysis == 'coxp')
             updateSelectizeInput(session, 'var_time', choices = varnames, selected=old_var_time, server = TRUE)
           else
             updateSelectizeInput(session, 'var_target', choices = varnames, selected=old_var_x, server = TRUE)
@@ -1369,7 +1371,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             label = "Analisys type:",
             choices = list("Linear Regression" = "lm",
                            "Generalized linear model (GLM)" = "glm",
-                           "Survival analysis" = "coxp")
+                           "Survival analysis" = "coxp"),
+            multiple=F
           ),
           
           shiny::conditionalPanel(
@@ -1378,7 +1381,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               ns("familyFunction"),
               label = "Output distribution",
               choices = list("Binomial (link=logistic)" = "binomial",
-                             "Poisson (link=log)" = "poisson")
+                             "Poisson (link=log)" = "poisson"),
+              multiple=F
             )
           ),
           
