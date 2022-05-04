@@ -28,6 +28,6 @@ shinyServer(function(input, output, session) {
   VisualSHIELDServer("VisualSHIELD", servers=login, assume.columns.type="numeric")
 
   output$server <- renderUI({
-    textInput("custom_server", label="Server to connect to:", value="", placeholder = "https://opal-demo.obiba.org")
+    textInput("custom_server", label="Server to connect to:", value="http://localhost:8080", placeholder = "https://opal-demo.obiba.org")
   })
 })
