@@ -55,7 +55,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
   
 #  library(ggpubr)
 #  library(cowplot)
-  
+
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -1937,7 +1937,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             tryCatch({
               cox.res <- get.ds.cox.full.model()
               elems <- lapply(names(o), function(serv){
-                shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(cox.res[[serv]]$model), collapse="\n") ,'</pre>'))
+                shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(cox.res[[serv]]$model$coefficients), collapse="\n") ,'</pre>'))
               })
             },
             error=function(cond){
@@ -1971,8 +1971,17 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                 # access model without reason, 
                 # silly, but otherwise for no reason sometimes plot doesn't work
                 # this is R magic, welcome
-                cox.res[[serv]]$model
-                plot(cox.res[[serv]]$fit, conf.int = TRUE, col = c('blue', 'red'))
+                #cox.res[[serv]]$model
+                cox.fit <- cox.res[[serv]]$fit
+                cox.df <- data.frame(time=cox.fit$time, surv=cox.fit$surv, 
+                                     lower=cox.fit$lower, upper=cox.fit$upper,
+                                     std.err=cox.fit$std.err)
+                p<- ggplot2::ggplot(cox.df, ggplot2::aes(x=time)) + 
+                      ggplot2::geom_ribbon(ggplot2::aes(ymin=surv-std.err, ymax=surv+std.err), fill = "grey70") + 
+                      ggplot2::geom_line(ggplot2::aes(y=surv))
+                plot(p)
+                #plot(, conf.int = TRUE, col = c('blue', 'red'))
+                #survminer::ggsurvplot(cox.res[[serv]]$fit, color = "#2E9FDF", ggtheme = ggplot2::theme_minimal())
               }
             },
             error=function(cond){
