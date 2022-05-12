@@ -55,7 +55,31 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
   
 #  library(ggpubr)
 #  library(cowplot)
-
+  # based on the Shiny fileInput function
+  customFileInput <- function(inputId, label = NULL, labelIcon = NULL, multiple = FALSE, 
+                         accept = NULL, width = NULL, progress = TRUE, ...) {
+    # add class fileinput_2 defined in UI to hide the inputTag
+    inputTag <- shiny::tags$input(id = inputId, name = inputId, type = "file", 
+                           class = "fileinput_custom", style="display:none;")
+    if (multiple) 
+      inputTag$attribs$multiple <- "multiple"
+    if (length(accept) > 0) 
+      inputTag$attribs$accept <- paste(accept, collapse = ",")
+    
+    div(..., style = if (!is.null(width)) paste0("width: ", validateCssUnit(width), ";"), 
+        inputTag,
+        # label customized with an action button
+        shiny::tags$label(`for` = inputId, div(icon(labelIcon), label, 
+                                        class = "btn btn-default action-button", style="margin-top: 25px; margin-left: -20px;")),
+        # optionally display a progress bar
+        if(progress)
+          shiny::tags$div(id = paste(inputId, "_progress", sep = ""), 
+                   class = "progress shiny-file-input-progress", 
+                   tags$div(class = "progress-bar")
+          )
+    )
+  }
+  
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -318,6 +342,24 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             updateSelectizeInput(session, 'var_target', choices = varnames, selected=old_var_x, server = TRUE)
         }
       }, ignoreInit = TRUE, ignoreNULL = FALSE)
+      
+      shiny::observeEvent({
+        input$InputBoxVars
+      },{
+        f <- input$InputBoxVars
+        req(f)
+        
+        selected <- readLines(f$datapath)
+        if( length(selected) == 0 )
+          return()
+        
+        globalValues$old_vars_x <- selected
+        
+        vars <- get.ds.project.table.variables()
+        varnames <- get.input.named.vars(vars)
+        updateSelectizeInput(session, 'box_vars', choices = varnames, selected=selected, server = TRUE)
+        
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
       # if button clicked -> show TRUE
       shiny::observe({
@@ -1228,9 +1270,19 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'boxplot'"),
               
-              shiny::selectizeInput(ns("box_vars"), "Variates",
-                                 choices=NULL,
-                                 multiple=T
+              fluidRow(
+                shiny::column(width=11,
+                  shiny::selectizeInput(ns("box_vars"), "Variates",
+                                     choices=NULL,
+                                     multiple=T
+                  )
+                ),
+                shiny::column(width=1,
+                              customFileInput(ns("InputBoxVars"), "", labelIcon = "folder-open-o", 
+                                         accept = c("text/csv",
+                                                    "text/comma-separated-values,text/plain",
+                                                    ".csv"), progress = FALSE)
+                )
               )
             ),
             shiny::conditionalPanel(
