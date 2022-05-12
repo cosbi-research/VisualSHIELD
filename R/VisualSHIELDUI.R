@@ -27,10 +27,10 @@
 VisualSHIELDUI <- function(id, title){
 #  library(shinydashboard)
 #  library(shinyjs)
-  
   ns <- shiny::NS(id)
   
   shinydashboard::dashboardPage(
+    tags$head(tags$style(HTML('.selectize-input {max-height: 200px; overflow-y: visible;}'))),
     # Application title
     #titlePanel(title = "", windowTitle = "DASH-IN interactive federated analysis system"),
     shinydashboard::dashboardHeader(title = title),
