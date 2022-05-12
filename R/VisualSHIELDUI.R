@@ -30,7 +30,7 @@ VisualSHIELDUI <- function(id, title){
   ns <- shiny::NS(id)
   
   shinydashboard::dashboardPage(
-    shiny::tags$head(shiny::tags$style(HTML('.selectize-input {max-height: 200px; overflow-y: visible;}'))),
+    #shiny::tags$head(shiny::tags$style(HTML('.selectize-input {max-height: 200px; overflow-y: visible;}'))),
     # Application title
     #titlePanel(title = "", windowTitle = "DASH-IN interactive federated analysis system"),
     shinydashboard::dashboardHeader(title = title),
@@ -43,7 +43,7 @@ VisualSHIELDUI <- function(id, title){
     ),  
     shinydashboard::dashboardBody(
       shiny::tags$head(
-        shiny::tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+        tags$style(HTML('.selectize-input {max-height: 200px; overflow-y: visible;}'))
       ),
       shinyjs::useShinyjs(),
       shinydashboard::tabItems(
