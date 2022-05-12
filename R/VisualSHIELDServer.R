@@ -343,23 +343,68 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         }
       }, ignoreInit = TRUE, ignoreNULL = FALSE)
       
-      shiny::observeEvent({
-        input$InputBoxVars
-      },{
-        f <- input$InputBoxVars
-        req(f)
-        
-        selected <- readLines(f$datapath)
+      ### LOAD LIST OF FIELDS TO ANALYZE FROM FILE ###
+      updateFieldFromFile <- function(fieldId, input_value){
+        selected <- readLines(input_value$datapath)
         if( length(selected) == 0 )
           return()
         
-        globalValues$old_vars_x <- selected
-        
         vars <- get.ds.project.table.variables()
         varnames <- get.input.named.vars(vars)
-        updateSelectizeInput(session, 'box_vars', choices = varnames, selected=selected, server = TRUE)
+        updateSelectizeInput(session, fieldId, choices = varnames, selected=selected, server = TRUE)
+        return(selected)
+      }
+      
+      shiny::observeEvent({
+        input$input_box_vars
+      },{
+        f <- input$input_box_vars
+        req(f)
         
+        selected<- updateFieldFromFile('box_vars', f)
+        globalValues$old_vars_x <- selected
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      
+      shiny::observeEvent({
+        input$input_knn_vars_x
+      },{
+        f <- input$input_knn_vars_x
+        req(f)
+        
+        selected<- updateFieldFromFile('knn_vars_x', f)
+        globalValues$old_vars_x <- selected
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      
+      shiny::observeEvent({
+        input$input_cca_vars_x
+      },{
+        f <- input$input_cca_vars_x
+        req(f)
+        
+        selected<- updateFieldFromFile('cca_vars_x', f)
+        globalValues$old_vars_x <- selected
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      
+      shiny::observeEvent({
+        input$input_cca_vars_y
+      },{
+        f <- input$input_cca_vars_y
+        req(f)
+        
+        selected<- updateFieldFromFile('cca_vars_y', f)
+        globalValues$old_vars_y <- selected
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      
+      shiny::observeEvent({
+        input$input_rf_vars
+      },{
+        f <- input$input_rf_vars
+        req(f)
+        
+        selected<- updateFieldFromFile('rf_vars', f)
+        globalValues$old_vars_x <- selected
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      ### END LOAD LIST OF FIELDS TO ANALYZE FROM FILE ###
       
       # if button clicked -> show TRUE
       shiny::observe({
@@ -1278,7 +1323,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                   )
                 ),
                 shiny::column(width=1,
-                              customFileInput(ns("InputBoxVars"), "", labelIcon = "folder-open-o", 
+                              customFileInput(ns("input_box_vars"), "", labelIcon = "folder-open-o", 
                                          accept = c("text/csv",
                                                     "text/comma-separated-values,text/plain",
                                                     ".csv"), progress = FALSE)
@@ -1288,9 +1333,18 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'princomp'"),
               
-              shiny::selectizeInput(ns("knn_vars_x"), "Variates",
-                                 choices=NULL,
-                                 multiple=T
+              fluidRow(
+                shiny::column(width=11,
+                  shiny::selectizeInput(ns("knn_vars_x"), "Variates",
+                                   choices=NULL,
+                                   multiple=T)
+                ),
+                shiny::column(width=1,
+                              customFileInput(ns("input_knn_vars_x"), "", labelIcon = "folder-open-o", 
+                                              accept = c("text/csv",
+                                                         "text/comma-separated-values,text/plain",
+                                                         ".csv"), progress = FALSE)
+                )
               ),
               shiny::numericInput(ns("knn_clusters"),
                                   "Number of clusters to compute (K-NN)",
@@ -1317,14 +1371,33 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
               
-              shiny::selectizeInput(ns("cca_vars_x"), "Variates X",
-                                 choices=NULL,
-                                 multiple=T
+              fluidRow(
+                shiny::column(width=11,
+                              shiny::selectizeInput(ns("cca_vars_x"), "Variates X",
+                                                    choices=NULL,
+                                                    multiple=T)
+                              ),
+                shiny::column(width=1,
+                              customFileInput(ns("input_cca_vars_x"), "", labelIcon = "folder-open-o", 
+                                              accept = c("text/csv",
+                                                         "text/comma-separated-values,text/plain",
+                                                         ".csv"), progress = FALSE)
+                              )
               ),
-              shiny::selectizeInput(ns("cca_vars_y"), "Variates Y",
-                                 choices=NULL,
-                                 multiple=T
+              fluidRow(
+                shiny::column(width=11,
+                              shiny::selectizeInput(ns("cca_vars_y"), "Variates Y",
+                                                    choices=NULL,
+                                                    multiple=T)
+                ),
+                shiny::column(width=1,
+                              customFileInput(ns("input_cca_vars_y"), "", labelIcon = "folder-open-o", 
+                                              accept = c("text/csv",
+                                                         "text/comma-separated-values,text/plain",
+                                                         ".csv"), progress = FALSE)
+                )
               ),
+              
               shiny::numericInput(ns("cca_lambda1"),
                                   "Regularization term for Cov(X) matrix",
                                   value=0.0,
@@ -1347,10 +1420,21 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                  NULL,
                                  selected=NULL
               ),
-              shiny::selectizeInput(ns("rf_vars"), "Classification variables",
-                                 choices=NULL,
-                                 multiple=T
+              fluidRow(
+                shiny::column(width=11,
+                              shiny::selectizeInput(ns("rf_vars"), "Classification variables",
+                                                    choices=NULL,
+                                                    multiple=T
+                              ),
+                ),
+                shiny::column(width=1,
+                              customFileInput(ns("input_rf_vars"), "", labelIcon = "folder-open-o", 
+                                              accept = c("text/csv",
+                                                         "text/comma-separated-values,text/plain",
+                                                         ".csv"), progress = FALSE)
+                )
               ),
+              
               shiny::selectInput(ns("x_measure"), "Importance plot X axis",
                                  choices=list("Mean min depth"="mean_min_depth",
                                               "Number of nodes"="no_of_nodes",
