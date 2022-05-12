@@ -2204,7 +2204,7 @@ get.model.vars <- function(o, vars, input, output, analysisType, familyFunction)
 }
 
 get.model.output.var <- function(output, analysisType, familyFunction, vars, o){
-  if((analysisType == 'lm' || analysisType == 'glm') && familyFunction == 'binomial'){
+  if(familyFunction == 'binomial'){
     output_var <- get.var.as.factor(o, vars, output)
   }else
     # if factorial, convert it to numeric otherwise we cannot apply family gaussian
