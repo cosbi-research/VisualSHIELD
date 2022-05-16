@@ -2282,7 +2282,6 @@ get.var.as <- function(o, in_df, target_types, target_suffix, in_df_var_types, v
   
   in_var <- paste0(in_df,"$",var)
   output_var <- paste0(var,target_suffix)
-  
   if( any(as.character(in_df_var_types[var, ]) == other_types) ){
     # convert and assign
     if( any(target_types == "numeric") )
@@ -2309,9 +2308,12 @@ get.var.as <- function(o, in_df, target_types, target_suffix, in_df_var_types, v
       })
     else
       stop(paste0("Error unknown target type ", target_types))
-  }else{
+  }else if(nchar(target_suffix)>0){
     # just assign
     dsBaseClient::ds.assign(toAssign = in_var, newobj = output_var, datasources=o)
+  }else{
+    # nothing to do, input == output
+    output_var <- in_var
   }
   return(output_var)
 }
