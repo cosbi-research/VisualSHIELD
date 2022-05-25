@@ -145,6 +145,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           else if(input$plotType == 'correlation'){
             vars_x <- input$cca_vars_x
             vars_y <- input$cca_vars_y
+          }else if(input$plotType == 'cor'){
+            vars_x <- input$cca_vars_x
           }else if(input$plotType == 'randomforest'){
             var_y <- input$rf_var_y
             vars_x <- input$rf_vars
@@ -322,6 +324,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         else if(input$plotType == 'princomp')
           updateSelectizeInput(session, 'knn_vars_x', choices = varnames, selected=old_vars_x, server = TRUE)
         else if(input$plotType == 'correlation'){
+          updateSelectizeInput(session, 'cca_vars_x', choices = varnames, selected=old_vars_x, server = TRUE)
+          updateSelectizeInput(session, 'cca_vars_y', choices = varnames, selected=old_vars_y, server = TRUE)
+        }else if(input$plotType == 'cor'){
           updateSelectizeInput(session, 'cca_vars_x', choices = varnames, selected=old_vars_x, server = TRUE)
           updateSelectizeInput(session, 'cca_vars_y', choices = varnames, selected=old_vars_y, server = TRUE)
         }else if(input$plotType == 'randomforest'){
@@ -1289,7 +1294,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                            "Box-plot"     = "boxplot",
                            "Principal Component Analysis" = "princomp",
                            "Random Forest" = "randomforest",
-                           "Correlation"  = "correlation",
+                           "Correlation"  = "cor",
+                           "Canonical Correlation"  = "correlation",
                            "Data imputation" = "vim",
                            "Analisys"     = "analisys")
           )
@@ -1369,11 +1375,11 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               )
             ),
             shiny::conditionalPanel(
-              condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
+              condition = paste0("input['",ns('plotType'),"'] == 'correlation' || input['",ns('plotType'),"'] == 'cor'"),
               
               fluidRow(
                 shiny::column(width=11,
-                              shiny::selectizeInput(ns("cca_vars_x"), "Variates X",
+                              shiny::selectizeInput(ns("cca_vars_x"), "Variates",
                                                     choices=NULL,
                                                     multiple=T)
                               ),
@@ -1384,33 +1390,35 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                                          ".csv"), progress = FALSE)
                               )
               ),
-              fluidRow(
-                shiny::column(width=11,
-                              shiny::selectizeInput(ns("cca_vars_y"), "Variates Y",
-                                                    choices=NULL,
-                                                    multiple=T)
+              shiny::conditionalPanel(
+                condition = paste0("input['",ns('plotType'),"'] == 'correlation'"),
+                  fluidRow(
+                    shiny::column(width=11,
+                                  shiny::selectizeInput(ns("cca_vars_y"), "Other variates",
+                                                        choices=NULL,
+                                                        multiple=T)
+                    ),
+                    shiny::column(width=1,
+                                  customFileInput(ns("input_cca_vars_y"), "", labelIcon = "folder-open-o", 
+                                                  accept = c("text/csv",
+                                                             "text/comma-separated-values,text/plain",
+                                                             ".csv"), progress = FALSE)
+                    )
                 ),
-                shiny::column(width=1,
-                              customFileInput(ns("input_cca_vars_y"), "", labelIcon = "folder-open-o", 
-                                              accept = c("text/csv",
-                                                         "text/comma-separated-values,text/plain",
-                                                         ".csv"), progress = FALSE)
+                shiny::numericInput(ns("cca_lambda1"),
+                                    "Regularization term for Cov(X) matrix",
+                                    value=0.0,
+                                    min=0.0,
+                                    step=0.001,
+                                    max=1.0
+                ),
+                shiny::numericInput(ns("cca_lambda2"),
+                                    "Regularization term for Cov(Y) matrix",
+                                    value=0.0,
+                                    min=0.0,
+                                    step=0.001,
+                                    max=1.0
                 )
-              ),
-              
-              shiny::numericInput(ns("cca_lambda1"),
-                                  "Regularization term for Cov(X) matrix",
-                                  value=0.0,
-                                  min=0.0,
-                                  step=0.001,
-                                  max=1.0
-              ),
-              shiny::numericInput(ns("cca_lambda2"),
-                                  "Regularization term for Cov(Y) matrix",
-                                  value=0.0,
-                                  min=0.0,
-                                  step=0.001,
-                                  max=1.0
               )
             ),
             shiny::conditionalPanel(
@@ -1858,6 +1866,30 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                 cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
               })
               
+            } else if ( input$plotType == "cor") {
+              get.vars.as.numeric(o, 'D', 'D.num', input$cca_vars_x, vars);
+              tryCatch({
+                vars.cor.opal <- dsBaseClient::ds.cor("D.num", type="combine", datasources = o)
+                vars.cor <- vars.cor.opal[["Correlation Matrix"]]
+                vars.cor[lower.tri(vars.cor)] <- NA
+                vars.melt <- reshape2::melt(vars.cor)
+                
+                ggplot2::ggplot(data = vars.melt, ggplot2::aes(x=Var1, y=Var2, fill=value)) + 
+                  ggplot2::geom_tile() + 
+                  ggplot2::geom_text(ggplot2::aes(Var1, Var2, label = value),
+                            color = "black", size = 4) +
+                  ggplot2::scale_fill_gradient2(low = "deepskyblue3", mid="aquamarine", high = "brown1") 
+              },
+              error=function(cond){
+                errs <- DSI::datashield.errors()
+                if( is.null(errs) )
+                  stop(cond)
+                else
+                  stop(errs)
+              },
+              warning=function(cond){
+                cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+              })
             } else if ( input$plotType == "correlation") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$cca_vars_x," against ", input$cca_vars_y, "\n"), file=LOG_FILE, append=TRUE)
               get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars);
