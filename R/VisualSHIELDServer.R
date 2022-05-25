@@ -1876,8 +1876,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                 
                 ggplot2::ggplot(data = vars.melt, ggplot2::aes(x=Var1, y=Var2, fill=value)) + 
                   ggplot2::geom_tile() + 
-                  ggplot2::geom_text(ggplot2::aes(Var1, Var2, label = value),
-                            color = "black", size = 4) +
+                  ggplot2::geom_text(ggplot2::aes(Var1, Var2, label = round(value,2)),
+                            color = "black", size = 3) +
                   ggplot2::scale_fill_gradient2(low = "deepskyblue3", mid="aquamarine", high = "brown1") 
               },
               error=function(cond){
