@@ -295,6 +295,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         globalValues$showPlot <- FALSE
         globalValues$last_RFS <- NA
         globalValues$last_KNN <- NA
+        globalValues$last_PRINCOMP <- NA
+        globalValues$last_COR <- NA
       })
       
       shiny::observeEvent({
@@ -1608,7 +1610,14 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           if ( input$plotType == "randomforest") {
             shiny::downloadButton(ns("downloadRFS"), "Download Random Forests model as an RDS")
           }else if ( input$plotType == "princomp") {
-            shiny::downloadButton(ns("downloadKNN"), "Download K-nearest neighbor model as an RDS")
+            shiny::fluidRow(
+              shiny::column(width=3,
+              	shiny::downloadButton(ns("downloadPRINCOMP"), "Download principal components as an RDS")),
+	      shiny::column(width=3,
+                shiny::downloadButton(ns("downloadKNN"), "Download K-nearest neighbor model computed on principal components as an RDS"))
+            )
+          }else if ( input$plotType == "cor") {
+            shiny::downloadButton(ns("downloadCOR"), "Download correlation matrix as an RDS")
           }else{
             shiny::tagList(shiny::span(""))
           }
@@ -1666,6 +1675,16 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         }
       )
       
+      output$downloadPRINCOMP <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          paste0(paste(names(o), collapse="-"), "-PRINCOMP.rds")
+        },
+        content = function(file) {
+          saveRDS(globalValues$last_PRINCOMP, file=file)
+        }
+      )
+      
       output$downloadKNN <- shiny::downloadHandler(
         filename = function() {
           o <- get.ds.login()
@@ -1676,6 +1695,16 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         }
       )
       
+      output$downloadCOR <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          paste0(paste(names(o), collapse="-"), "-COR.rds")
+        },
+        content = function(file) {
+          saveRDS(globalValues$last_COR, file=file)
+        }
+      )
+
       # plot explorative analysis
       output$distPlot <- shiny::renderPlot({
         if(!globalValues$showPlot || !is.load.ready() || !is.analysis.ready())
@@ -1871,6 +1900,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               tryCatch({
                 vars.cor.opal <- dsBaseClient::ds.cor("D.num", type="combine", datasources = o)
                 vars.cor <- vars.cor.opal[["Correlation Matrix"]]
+                globalValues$last_COR <- vars.cor
                 vars.cor[lower.tri(vars.cor)] <- NA
                 vars.melt <- reshape2::melt(vars.cor)
                 
@@ -1921,6 +1951,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                                             center=T, scale=F,
                                                             scores.suffix='.scores',
                                                             async=T, datasources=o);
+                globalValues$last_PRINCOMP <- princomp;
                 knn <- dsSwissKnifeClient::dssKmeans('Variables', centers = input$knn_clusters, 
                                                      iter.max = input$knn_max_iter, nstart = input$knn_start, 
                                                      datasources=o);
