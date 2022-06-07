@@ -1612,9 +1612,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           }else if ( input$plotType == "princomp") {
             shiny::fluidRow(
               shiny::column(width=3,
-              	shiny::downloadButton(ns("downloadPRINCOMP"), "Download principal components as an RDS")),
+              	shiny::downloadButton(ns("downloadPRINCOMP"), "Download PCA as an RDS")),
 	      shiny::column(width=3,
-                shiny::downloadButton(ns("downloadKNN"), "Download K-nearest neighbor model computed on principal components as an RDS"))
+                shiny::downloadButton(ns("downloadKNN"), "Download K-NN model computed on PCA as an RDS"))
             )
           }else if ( input$plotType == "cor") {
             shiny::downloadButton(ns("downloadCOR"), "Download correlation matrix as an RDS")
