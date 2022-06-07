@@ -1613,7 +1613,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             shiny::fluidRow(
               shiny::column(width=3,
               	shiny::downloadButton(ns("downloadPRINCOMP"), "Download PCA as an RDS")),
-	      shiny::column(width=3,
+	            shiny::column(width=3,
                 shiny::downloadButton(ns("downloadKNN"), "Download K-NN model computed on PCA as an RDS"))
             )
           }else if ( input$plotType == "cor") {
