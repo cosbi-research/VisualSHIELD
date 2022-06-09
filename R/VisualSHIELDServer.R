@@ -1359,7 +1359,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                   value=3,
                                   min=2,
                                   step=1,
-                                  max=50
+                                  max=8
               ),
               shiny::numericInput(ns("knn_max_iter"),
                                   "Maximum number of iterations (K-NN)",
@@ -1956,11 +1956,24 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                                      iter.max = input$knn_max_iter, nstart = input$knn_start, 
                                                      datasources=o);
                 globalValues$last_KNN <- knn;
-                dsSwissKnifeClient::biplot.dssPrincomp(princomp$global,
-                                                       type="combine",
-                                                       draw.arrows = T,
-                                                       levels = paste0('Variables_km_clust', input$knn_clusters),
-                                                       datasources=o);
+                #dsSwissKnifeClient::biplot.dssPrincomp(princomp$global,
+                #                                       type="combine",
+                #                                       draw.arrows = T,
+                #                                       levels = paste0('Variables_km_clust', input$knn_clusters),
+                #                                       datasources=o);
+                cluster.map <- apply(knn$global$centers, MARGIN=2, function(e){ names(which(e == min(e))) })
+                colors<-c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D", "#666666")
+                cluster.color<- sapply(cluster.map, function(e){ colors[as.numeric(e)] })
+                
+                df=data.frame(PCA1=princomp$global$loadings[,1], 
+                              PCA2=princomp$global$loadings[,2], 
+                              text=names(princomp$global$loadings[,1]), 
+                              cluster=cluster.map, 
+                              color=cluster.color)
+                p<-ggplot2::ggplot(df, ggplot2::aes(x=PCA1, y=PCA2, color=color)) + 
+                  ggplot2::geom_text(ggplot2::aes(PCA1,PCA2,label=text))  + 
+                  ggplot2::theme(legend.title=ggplot2::element_blank(), legend.text = ggplot2::element_blank(), legend.position = NaN)
+                plot(p)
               },
               error=function(cond){
                 errs <- DSI::datashield.errors()
