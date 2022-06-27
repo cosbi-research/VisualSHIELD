@@ -2185,13 +2185,13 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                 # this is R magic, welcome
                 #cox.res[[serv]]$model
                 cox.fit <- cox.res[[serv]]$fit
-                cox.df <- data.frame(time=cox.fit$time, surv=cox.fit$surv, 
-                                     lower=cox.fit$lower, upper=cox.fit$upper,
-                                     std.err=cox.fit$std.err)
-                p<- ggplot2::ggplot(cox.df, ggplot2::aes(x=time)) + 
-                      ggplot2::geom_ribbon(ggplot2::aes(ymin=surv-std.err, ymax=surv+std.err), fill = "grey70") + 
-                      ggplot2::geom_line(ggplot2::aes(y=surv))
-                plot(p)
+                #cox.df <- data.frame(time=cox.fit$time, surv=cox.fit$surv, 
+                #                     lower=cox.fit$lower, upper=cox.fit$upper,
+                #                     std.err=cox.fit$std.err)
+                #p<- ggplot2::ggplot(cox.df, ggplot2::aes(x=time)) + 
+                #      ggplot2::geom_ribbon(ggplot2::aes(ymin=surv-std.err, ymax=surv+std.err), fill = "grey70") + 
+                #      ggplot2::geom_line(ggplot2::aes(y=surv))
+                plot(cox.fit, conf.int = TRUE, col = c('blue', 'red'))
                 #plot(, conf.int = TRUE, col = c('blue', 'red'))
                 #survminer::ggsurvplot(cox.res[[serv]]$fit, color = "#2E9FDF", ggtheme = ggplot2::theme_minimal())
               }
@@ -2386,7 +2386,16 @@ get.var.as <- function(o, in_df, target_types, target_suffix, in_df_var_types, v
       stop(paste0("Error unknown target type ", target_types))
   }else if(nchar(target_suffix)>0){
     # just assign
-    dsBaseClient::ds.assign(toAssign = in_var, newobj = output_var, datasources=o)
+    tryCatch({
+      dsBaseClient::ds.assign(toAssign = in_var, newobj = output_var, datasources=o)
+    },
+    error=function(cond){
+      errs <- DSI::datashield.errors()
+      if( is.null(errs) )
+        stop(cond)
+      else
+        stop(errs)
+    })
   }else{
     # nothing to do, input == output
     output_var <- in_var
