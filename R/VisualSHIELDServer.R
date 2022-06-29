@@ -2239,6 +2239,47 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         
       })
       # === END ANALYSIS
+      # ------------------- DATA MANIPULATION ------------------------------
+      shiny::observeEvent({
+        input$store_col
+      },{
+        o <- get.ds.login()
+        vars <- get.ds.project.table.variables()
+        varnames <- get.input.named.vars(vars)
+        input$new_col
+        incode <- input$manipulation_code
+
+        browser()        
+        # append D$ to each explanatory variable
+        explanatory_var <- gsub("([a-zA-Z][a-zA-Z0-9#^_.]*)", "D$\\1", incode)
+        # find #<type> after the variables
+        to.convert <- regmatches(explanatory_var, gregexpr("D\\$[a-zA-Z0-9^_.]+\\#[a-z]+", explanatory_var))
+        to.convert <- unlist(to.convert)
+        # -------- apply conversions ------
+        convert.variables(to.convert, o)
+        to.keep <- regmatches(explanatory_var, gregexpr("D\\$[a-zA-Z0-9^_.]+", explanatory_var))
+        to.keep <- unlist(to.keep)
+        
+        sapply(to.keep, function(m){
+          tryCatch({
+            dsBaseClient::ds.assign(toAssign = m, newobj = paste0(m,'_conv'), datasources=o)
+          },
+          error=function(cond){
+            errs <- DSI::datashield.errors()
+            if( is.null(errs) )
+              stop(cond)
+            else
+              stop(errs)
+          })
+        })
+        
+        # after creation of converted variables server side  
+        # string replace the explanatory expression to use them
+        explanatory_var <- gsub("D\\$([a-zA-Z0-9^_.]+)\\#[a-z]+", "\\1_conv", explanatory_var)
+        explanatory_var <- gsub("D\\$([a-zA-Z0-9^_.]+)", "\\1_conv", explanatory_var)
+        
+      }, ignoreInit = TRUE, ignoreNULL = FALSE)
+      # === END MANIPULATION
     })
 }
 
@@ -2403,15 +2444,7 @@ get.var.as <- function(o, in_df, target_types, target_suffix, in_df_var_types, v
   return(output_var)
 }
 
-get.model.vars <- function(o, vars, input, output, analysisType, familyFunction){
-  # append D$ to each explanatory variable
-  explanatory_var <- gsub("([a-zA-Z0-9#^_.]+)", "D$\\1", input)
-  # re-sub D$1 with 1.. (for the intercept)
-  explanatory_var <- gsub("D$1", "1", explanatory_var, fixed=TRUE)
-  # find #<type> after the variables
-  matches <- regmatches(explanatory_var, gregexpr("D\\$[a-zA-Z0-9^_.]+\\#[a-z]+", explanatory_var))
-  matches <- unlist(matches)
-  # -------- apply conversions ------
+convert.variables <- function(matches, o){
   sapply(matches, function(m){
     type <- substr(m, nchar(m)-2, nchar(m))
     name <- substr(m, 0, nchar(m)-4)
@@ -2425,6 +2458,18 @@ get.model.vars <- function(o, vars, input, output, analysisType, familyFunction)
             }
     )
   })
+}
+
+get.model.vars <- function(o, vars, input, output, analysisType, familyFunction){
+  # append D$ to each explanatory variable
+  explanatory_var <- gsub("([a-zA-Z0-9#^_.]+)", "D$\\1", input)
+  # re-sub D$1 with 1.. (for the intercept)
+  explanatory_var <- gsub("D$1", "1", explanatory_var, fixed=TRUE)
+  # find #<type> after the variables
+  matches <- regmatches(explanatory_var, gregexpr("D\\$[a-zA-Z0-9^_.]+\\#[a-z]+", explanatory_var))
+  matches <- unlist(matches)
+  # -------- apply conversions ------
+  convert.variables(matches, o)
   
   # after creation of converted variables server side  
   # string replace the explanatory expression to use them

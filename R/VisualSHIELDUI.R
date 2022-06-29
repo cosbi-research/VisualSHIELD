@@ -37,6 +37,7 @@ VisualSHIELDUI <- function(id, title){
     shinydashboard::dashboardSidebar(
       shinydashboard::sidebarMenu(
         shinydashboard::menuItem("Data Servers", tabName = ns("datasources"), icon = shiny::icon("server")),
+        shinydashboard::menuItem("Data Manipulation", icon = shiny::icon("columns"), tabName = ns("manipulation")),
         shinydashboard::menuItem("Analysis", icon = shiny::icon("bar-chart"), tabName = ns("analysis"))
         #badgeLabel = "new", badgeColor = "green")
       )
@@ -63,6 +64,33 @@ VisualSHIELDUI <- function(id, title){
                                     )
                                   ),
                                   shiny::uiOutput(ns("serversList"))
+                                )
+        ),
+        shinydashboard::tabItem(tabName = ns("manipulation"),
+                                shiny::conditionalPanel(condition=paste0("!output['", ns('analysisReady'),"']"),
+                                                        shiny::fluidRow(shinydashboard::box(width=12,
+                                                                                            shiny::h4('Select the data you want to analyse from the "Data Servers" menu')
+                                                        ))
+                                ),
+                                shiny::conditionalPanel(condition=paste0("output['",ns('analysisReady'),"']"),
+                                  shiny::fluidRow(
+                                    shinydashboard::box(width = 12, title = "Instructions", status = "primary", solidHeader = TRUE,
+                                                        shiny::tagList(
+                                                          shiny::h4("In this tab you can compute arbitrary R functions on the remote data and store the results in the 'D' data.frame for further analysis through the 'analysis' tab.")
+                                                          )
+                                    ),
+                                    shinydashboard::box(width = 12, title = "Instructions", status = "primary", solidHeader = TRUE,
+                                      shiny::fluidRow(
+                                        shiny::textInput(ns("new_col"), width='100%', "New 'D' column name", value = ""),
+                                        shiny::textAreaInput(
+                                          ns("manipulation_code"),
+                                          width = '100%',
+                                          label = "R Script to be run server-side. It should add new columns to the 'D' dataframe used by the analysis tab."
+                                        ),
+                                        shiny::actionButton(ns("store_col"), "Store new column")
+                                      )
+                                    )
+                                  )
                                 )
         ),
         shinydashboard::tabItem(tabName = ns("analysis"),
