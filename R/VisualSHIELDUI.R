@@ -79,17 +79,20 @@ VisualSHIELDUI <- function(id, title){
                                                           shiny::h4("In this tab you can compute arbitrary R functions on the remote data and store the results in the 'D' data.frame for further analysis through the 'analysis' tab.")
                                                           )
                                     ),
-                                    shinydashboard::box(width = 12, title = "Instructions", status = "primary", solidHeader = TRUE,
-                                      shiny::fluidRow(
-                                        shiny::textInput(ns("new_col"), width='100%', "New 'D' column name", value = ""),
+                                    shinydashboard::box(width = 12, title = "Manipulation", status = "primary", solidHeader = TRUE,
+                                        shiny::tagList(
+                                          shiny::h4("R Script to be run server-side. The arbitrary R code in the 'Manipulation code' box should create a new variable with the name you choosed in the 'New column name' box, that will be added as a column to the default DataShield dataframe.")
+                                        ),
+                                        shiny::textInput(ns("new_col_name"), label="New column name", placeholder="x"),
                                         shiny::textAreaInput(
                                           ns("manipulation_code"),
                                           width = '100%',
-                                          label = "R Script to be run server-side. It should add new columns to the 'D' dataframe used by the analysis tab."
+                                          label = "Manipulation code",
+                                          placeholder = "log(D$existing.col1 * D$existing.col2 + 1, base=2)"
                                         ),
-                                        shiny::actionButton(ns("store_col"), "Store new column")
+                                        shiny::actionButton(ns("store_col"), "Store new column"),
+                                        shiny::uiOutput(ns("storeResult"), inline=F)
                                       )
-                                    )
                                   )
                                 )
         ),

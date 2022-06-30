@@ -86,6 +86,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       ns <- session$ns
       extraComboBoxes <- list()
       globalValues <- shiny::reactiveValues()
+      globalValues$ds.prj.vars <- NULL
       available_glm_models = list("identity","logistic","log")
       names(available_glm_models) <- c("gaussian","binomial","poisson")
       
@@ -239,6 +240,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       
       
       ## OBSERVERS FOR TEST BIOMARKERS BUTTON ###########
+      shiny::observeEvent(input$load, {
+        globalValues$ds.prj.vars<-NULL
+      })
       shiny::observeEvent(input$analysisFields, {
         if( !is.null(input$analysisFields) && input$analysisFields != "")
           shinyjs::enable("testBiomarker")
@@ -695,6 +699,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         # this block depends only on input$load button
         if( is.null(input$load) || !input$load)
           return(NULL)
+        else if( !is.null(globalValues$ds.prj.vars) )
+          return(globalValues$ds.prj.vars)
         
         shiny::isolate({
           #tryCatch({
@@ -774,6 +780,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           
           adf <- data.frame(type=unlist(coltypes))
           row.names(adf) <- cols
+          globalValues$ds.prj.vars<-adf
           return(adf)
         })
       })
@@ -1272,7 +1279,6 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                          datashielderr
           )              
       })
-      
       
       init.progress$close()
       globalValues$serversLoaded <- TRUE
@@ -2244,41 +2250,85 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         input$store_col
       },{
         o <- get.ds.login()
-        vars <- get.ds.project.table.variables()
-        varnames <- get.input.named.vars(vars)
-        input$new_col
+        estr<-NULL
+        varnames <- get.input.named.vars(globalValues$ds.prj.vars)
         incode <- input$manipulation_code
+        new_col_name <- input$new_col_name
 
-        browser()        
-        # append D$ to each explanatory variable
-        explanatory_var <- gsub("([a-zA-Z][a-zA-Z0-9#^_.]*)", "D$\\1", incode)
-        # find #<type> after the variables
-        to.convert <- regmatches(explanatory_var, gregexpr("D\\$[a-zA-Z0-9^_.]+\\#[a-z]+", explanatory_var))
+        # find #<type> after the variables and convert the relative variable
+        to.convert <- regmatches(incode, gregexpr("D\\$[a-zA-Z0-9^_.]+\\#[a-z]+", incode))
         to.convert <- unlist(to.convert)
         # -------- apply conversions ------
         convert.variables(to.convert, o)
-        to.keep <- regmatches(explanatory_var, gregexpr("D\\$[a-zA-Z0-9^_.]+", explanatory_var))
+        to.convert <- gsub('D\\$([a-zA-Z0-9^_.]+)\\#[a-z]+', '\\1', to.convert)
+        to.keep <- regmatches(incode, gregexpr("D\\$[a-zA-Z0-9^_.]+", incode))
         to.keep <- unlist(to.keep)
-        
+        to.keep <- gsub('D\\$', '', to.keep)
+        to.keep <- setdiff(to.keep, to.convert)
         sapply(to.keep, function(m){
-          tryCatch({
-            dsBaseClient::ds.assign(toAssign = m, newobj = paste0(m,'_conv'), datasources=o)
-          },
-          error=function(cond){
-            errs <- DSI::datashield.errors()
-            if( is.null(errs) )
-              stop(cond)
-            else
-              stop(errs)
-          })
+            tryCatch({
+              dsBaseClient::ds.assign(toAssign = paste0('D$',m), newobj = paste0(m,'_conv'), datasources=o)
+            },
+            error=function(cond){
+              errs <- DSI::datashield.errors()
+              if( is.null(errs) )
+                e<-cond
+              else
+                e<-errs
+              
+              estr <<- paste0(Sys.time(),"  ","ERROR adding dataframe column: ", e, "\n")
+              cat(estr, file=LOG_FILE, append=TRUE)
+            })
         })
         
         # after creation of converted variables server side  
         # string replace the explanatory expression to use them
-        explanatory_var <- gsub("D\\$([a-zA-Z0-9^_.]+)\\#[a-z]+", "\\1_conv", explanatory_var)
-        explanatory_var <- gsub("D\\$([a-zA-Z0-9^_.]+)", "\\1_conv", explanatory_var)
+        for(var in to.convert){
+          incode <- gsub(paste0("D\\$",var,"\\#[a-z]+"), paste0(var,"_conv"), incode)
+        }
+        for(var in to.keep){
+          incode <- gsub(paste0("D\\$",var), paste0(var,"_conv"), incode)
+        }
+        # execute code
+        tryCatch({
+          # not used, just a sanity check that code can be parsed
+          parsed<-parse(text=incode)[[1]]
+          dsBaseClient::ds.assign(toAssign = incode, newobj = new_col_name, datasources=o)
+          dsBaseClient::ds.cbind(x=c('D', new_col_name),
+                                   newobj='D',
+                                   notify.of.progress = F,
+                                   DataSHIELD.checks = F,
+                                   datasources=o)
+        }, error=function(cond){
+          errs <- DSI::datashield.errors()
+          if( is.null(errs) )
+            e<-cond
+          else
+            e<-errs
+          
+          estr <<- paste0(Sys.time(),"  ","ERROR adding dataframe column: ", e, "\n")
+          cat(estr, file=LOG_FILE, append=TRUE)
+        })
         
+        if(is.null(estr)){
+          # update dataframe of variables
+          adf <- data.frame(type=c("numeric"))
+          row.names(adf) <- c(new_col_name)
+          globalValues$ds.prj.vars<-rbind(globalValues$ds.prj.vars, adf)
+        }
+        
+        output$storeResult <- shiny::renderUI({
+          if(is.null(estr))
+            shiny::span(style="color:green; margin-top: 5px;", paste0("Variable '",new_col_name,"' is now ready to be used."))
+          else
+            shiny::span(style="color:red; margin-top: 5px;", estr)
+        })
       }, ignoreInit = TRUE, ignoreNULL = FALSE)
+    
+      output$storeResult <- shiny::renderUI({
+        shiny::span("")
+      })
+    
       # === END MANIPULATION
     })
 }
