@@ -4,6 +4,7 @@ services:
 #    build: opal
     ports:
       - "8870:8080"
+      - "8843:8443"
     depends_on:
       - mongo
       - rock
@@ -38,6 +39,7 @@ services:
   mongo:
     image: mongo:4.2
     command: --serviceExecutor adaptive --wiredTigerCacheSizeGB 2
+    restart: always
     deploy:
       resources:
         limits:
