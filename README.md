@@ -13,11 +13,33 @@ For more information and guided hands-on tutorials on how everything can be syst
 ## Table of contents
 
 - [Installation](#installation)
+  + [Automatic](#Quick-installation)
+  + [Manual](#manual-installation)
 - [Usage](#usage)
   + [Embed the VisualSHIELD UI in your Shiny App](#embed-the-visualshield-server-module-in-your-shiny-app)
   + [Embed the VisualSHIELD Server in your Shiny App](#embed-visualshield-ui-module-in-your-shiny-app)
 
-# Installation
+# Quick Installation
+If you have Docker installed you can get up and running in a breeze with [docker compose](https://docs.docker.com/compose/).
+Just cd into the VisualSHIELD directory and type
+
+```
+docker compose up -d
+```
+
+Docker will download and connect in the right way
+
+- the mongodb datastore
+- the opal server
+- the rock R server with all the R dependencies pre-installed
+
+When you finish using it you can turn off by typing
+
+```
+docker compose down
+```
+
+# Manual Installation
 
 First install all the dependencies.
 

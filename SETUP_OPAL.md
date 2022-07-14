@@ -1,4 +1,4 @@
-# Opal/DataSHIELD installation with dsSwissKnife and dsSSCP
+# Opal/DataSHIELD installation with dsSwissKnife, dsSSCP and dsCOV
 
 1. follow https://opaldoc.obiba.org/en/latest/admin/installation.html
 
