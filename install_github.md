@@ -1,0 +1,1 @@
+remotes::install_github('cosbi-research/VisualSHIELD@main', auth_token='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', repos=c(getOption('repos'), 'http://cran.datashield.org', 'https://bioconductor.org/packages/3.3/bioc', 'https://bioconductor.org/packages/3.3/data/annotation','https://bioconductor.org/packages/3.3/data/experiment','https://bioconductor.org/packages/3.3/extra'))
