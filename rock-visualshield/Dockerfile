@@ -9,3 +9,5 @@ RUN Rscript -e "remotes::install_github('sib-swiss/dsSwissKnife', repos = c('htt
 RUN Rscript -e "remotes::install_github('sib-swiss/dsSwissKnifeClient', repos = c('https://cloud.r-project.org', 'https://cran.datashield.org'), dependencies = TRUE, upgrade = FALSE, lib = '$ROCK_LIB')"
 RUN Rscript -e "remotes::install_github('vanduttran/dsSSCP', repos = c('https://cloud.r-project.org', 'https://cran.datashield.org'), dependencies = TRUE, upgrade = FALSE, lib = '$ROCK_LIB')"
 RUN Rscript -e "remotes::install_github('vanduttran/dsCOV@main', repos = c('https://cloud.r-project.org', 'https://cran.datashield.org'), dependencies = TRUE, upgrade = FALSE, lib = '$ROCK_LIB')"
+
+RUN sed '3s/.*/ulimit -s unlimited/' /docker-entrypoint.sh

@@ -18,7 +18,7 @@ services:
 
   rock:
     #image: datashield/rock-base:latest
-    build: rock-visualshield
+    build: cosbi/rock-visualshield
     ports:
       - 8085:8085
     environment:
