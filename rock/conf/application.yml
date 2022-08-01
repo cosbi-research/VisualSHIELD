@@ -1,0 +1,47 @@
+# Rserver controller port
+server:
+  port: 8085
+
+# Cluster node
+node:
+  # server id
+  id: default-1
+  # cluster name
+  cluster: default
+  # informative tags
+  tags: 
+  # optional public address, required only for self-registration
+  server: 
+
+# Consul service registry
+consul:
+  server: 
+  token: 
+  # health check interval
+  interval: 10
+
+# Opal app registry
+opal:
+  server: 
+  token: 
+
+# R executable path, required to launch Rserver
+r:
+  exec: /usr/bin/R
+  repos: https://cloud.r-project.org,https://cran.obiba.org
+
+# Security
+security:
+  users:
+    # administrator, can do all
+    - id: 
+      secret: 
+      roles: administrator
+    # manager of the R server and sessions, can manage the server but cannot use R
+    - id: 
+      secret: 
+      roles: manager
+    # R sessions user, can use R
+    - id: 
+      secret: 
+      roles: user
