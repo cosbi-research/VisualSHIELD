@@ -1,6 +1,6 @@
 services:
   opal:
-    image: obiba/opal:4.4
+    image: obiba/opal:latest
 #    build: opal
     ports:
       - "8870:8080"
@@ -13,8 +13,8 @@ services:
       - MONGO_HOST=mongo
       - MONGO_PORT=27017
       - ROCK_HOSTS=rock:8085
-    volumes:
-      - C:\Users\Tomasoni\git\VisualSHIELD\opal\conf:/srv/conf
+    #volumes:
+    #  - C:\Users\Tomasoni\git\VisualSHIELD\opal\conf:/srv/conf
 
   rock:
     #image: datashield/rock-base:latest
@@ -24,7 +24,8 @@ services:
     environment:
       - ROCK_ID=default-1
       - ROCK_CLUSTER=default
-
+    volumes:
+      - C:\Users\Tomasoni\git\VisualSHIELD\rock\conf:/srv/conf
   mongo-express:
     image: mongo-express
     depends_on:
