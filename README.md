@@ -1,26 +1,51 @@
 # VisualSHIELD
 
-<img align="right" height="100" src="https://dashin.cosbi.eu/img/dash-in_logo.png">
+VisualSHIELD allows to create reactive visual web UIs to seamlessly analyze multiple remote datasets together,
 
-VisualSHIELD allows to create reactive visual web UIs to seamlessly analyze multiple remote datasets in parallel hosted on [Opal](https://www.obiba.org/pages/products/opal/) and **XXX optionally** provides a facility to load [dbNP](https://dashin.eu/interventionstudies/) data into Opal. The [DASH-IN interactive federated analysis system](https://dashin.cosbi.eu/) is a unifying visual federated analytical framework of observational and interventional studies powered by VisualSHIELD and contribuited to the [ENPADASI](https://www.dtls.nl/wp-content/uploads/2016/05/ENPADASI_Bouwman_250516_FAIR.pdf#page=7) project of 51 partners in 9 European countries.
+hosted on [Opal](https://www.obiba.org/pages/products/opal/) through DataSHIELD.
 
-VisualSHIELD is a shiny app module offering ready-to-use self-contained UI and logic to be easily integrated in your custom Shiny App. See XXX SCREENSHOTS or XXX LIVE DEMO.
+The DASH-IN interactive federated analysis system, is a unifying visual federated analytical framework of observational and interventional studies that was the first incubator for the current VisualSHIELD.
+
+VisualSHIELD development contribuited to the [ENPADASI](https://www.dtls.nl/wp-content/uploads/2016/05/ENPADASI_Bouwman_250516_FAIR.pdf#page=7) project of 51 partners in 9 European countries.
+
+VisualSHIELD is a shiny app module offering ready-to-use self-contained UI and logic to be easily integrated in your custom Shiny App. 
+
+See XXX SCREENSHOTS or XXX LIVE DEMO.
 
 This repository contains the reference implementation for VisualSHIELD. You may freely use this work in your research and activities under the BSD 3-Clause License (see LICENSE file).
 
-For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) or get in touch with the Cosbi Bioinformatics lab, led by lombardo@cosbi.eu. We'll be happy to help!
+For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) 
+or get in touch with the [Cosbi Bioinformatics lab](bioinformatics@cosbi.eu)
+
+We'll be happy to help!
 
 ## Table of contents
 
 - [Installation](#installation)
-  + [Automatic](#Quick-installation)
-  + [Manual](#manual-installation)
+- [Self-hosting](#self-hosting)
+  + [Automatic](#quick-dependencies)
+  + [Manual](#manual-dependencies)
 - [Usage](#usage)
   + [Embed the VisualSHIELD UI in your Shiny App](#embed-the-visualshield-server-module-in-your-shiny-app)
   + [Embed the VisualSHIELD Server in your Shiny App](#embed-visualshield-ui-module-in-your-shiny-app)
 
-# Quick Installation
+# Installation
+
+On an R console just type
+```
+remotes::install_github('cosbi-research/VisualSHIELD@main')
+```
+
+# Self Hosting
+
+To quickly experiment with your own dataset, you can self-host your opal server together with DataSHIELD and all the required server-side dependencies.
+
+This can be accomplished quickly with [docker compose](#quick-dependencies) or [manually](#manual-dependencies).
+
+## Quick Dependencies
+
 If you have Docker installed you can get up and running in a breeze with [docker compose](https://docs.docker.com/compose/).
+
 Just cd into the VisualSHIELD directory and type
 
 ```
@@ -33,32 +58,23 @@ Docker will download and connect in the right way
 - the opal server
 - the rock R server with all the R dependencies pre-installed
 
-When you finish using it you can turn off by typing
+When you finish using it you can turn off by cd into the VisualSHIELD directory and typing
 
 ```
-docker compose down
+docker compose stop
 ```
 
-# Manual Installation
+To re-start cd into the VisualSHIELD directory and type 
 
-First install all the dependencies.
-
-Many packages need curl. Under linux you may need to install the following curl development package
- * in Debian, Ubuntu, etc: libcurl4-openssl-dev 
- * in Fedora, CentOS, RHEL: libcurl-devel
- * in Solaris: libcurl_dev 
-
-```R
-install.packages(c('shiny', 'shinyjs', 'shinydashboard', 'opalr', 'DSI', 'DSOpal', 'ggplot2', 'ggpubr', 'cowplot'))
-install.packages('dsBase', repos=c(getOption('repos'), 'https://cran.obiba.org'))
-install.packages('dsBaseClient', repos=c(getOption('repos'), 'https://cran.obiba.org'))
+```
+docker compose start
 ```
 
-Then, to install VisualSHIELD just type from R console
+See [docker compose](https://docs.docker.com/compose/) documentation for further details.
 
-```R
-install.packages('VisualSHIELD_1.0.tar.gz')
-```
+## Manual Dependencies
+
+see the [Manual installation manual](SETUP_OPAL.md) for instructions on how to manually install and set-up everything needed for performing remote experiments with VisualSHIELD.
 
 # Usage
 
