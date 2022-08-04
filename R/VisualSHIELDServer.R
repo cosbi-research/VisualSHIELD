@@ -1728,9 +1728,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
 
             if ( input$plotType == "hist") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$hist_var," with an histogram plot", "\n"), file=LOG_FILE, append=TRUE)
-              x_var <- get.var.as.numeric(o, vars, input$hist_var)
               
               h  <- tryCatch({
+                x_var <- get.var.as.numeric(o, vars, input$hist_var)
                 dsBaseClient::ds.histogram(x = x_var, num.breaks = input$intervals, 
                                            method='probabilistic',
                                            type='combine',
@@ -1800,12 +1800,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               
             } else if ( input$plotType == "contour") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$contour_var_x," against ", input$contour_var_y," with an contour plot", "\n"), file=LOG_FILE, append=TRUE)
-              x_var <- get.var.as.numeric(o, vars, input$contour_var_x)
-              y_var <- get.var.as.numeric(o, vars, input$contour_var_y)
               
               # delete unclear labels and title
               graphics::par(col.main="white", col.lab="white")
               tryCatch({
+                x_var <- get.var.as.numeric(o, vars, input$contour_var_x)
+                y_var <- get.var.as.numeric(o, vars, input$contour_var_y)
                 dsBaseClient::ds.contourPlot(x = x_var,
                                              y = y_var,
                                              numints = input$intervals,
@@ -1835,11 +1835,11 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               
             } else if ( input$plotType == "heatmap") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is analyzing ", input$heat_var_x," against ", input$heat_var_y," with an heatmap plot", "\n"), file=LOG_FILE, append=TRUE)
-              y_var <- get.var.as.numeric(o, vars, input$heat_var_y)
-              x_var <- get.var.as.numeric(o, vars, input$heat_var_x)
               
               graphics::par(col.main="white", col.lab="white")
               tryCatch({
+                y_var <- get.var.as.numeric(o, vars, input$heat_var_y)
+                x_var <- get.var.as.numeric(o, vars, input$heat_var_x)
                 dsBaseClient::ds.heatmapPlot(x = x_var,
                                              y = y_var,
                                              numints = input$intervals,
@@ -1868,9 +1868,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               
             } else if ( input$plotType == "boxplot") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing box-plot on ", input$box_vars,"\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', input$box_vars, vars);
               
               tryCatch({
+                get.vars.as.numeric(o, 'D', 'D.num', input$box_vars, vars);
                 dsBaseClient::ds.boxPlot(datasources=o, x='D.num', variables=input$box_vars, type="pooled")
               },
               error=function(cond){
@@ -1906,8 +1906,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               })
               
             } else if ( input$plotType == "cor") {
-              get.vars.as.numeric(o, 'D', 'D.num', input$cca_vars_x, vars);
               tryCatch({
+                get.vars.as.numeric(o, 'D', 'D.num', input$cca_vars_x, vars);
                 vars.cor.opal <- dsBaseClient::ds.cor("D.num", type="combine", datasources = o)
                 vars.cor <- vars.cor.opal[["Correlation Matrix"]]
                 globalValues$last_COR <- vars.cor
@@ -1932,9 +1932,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               })
             } else if ( input$plotType == "correlation") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$cca_vars_x," against ", input$cca_vars_y, "\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars);
 
               tryCatch({
+                get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars);
                 res = dsCOVclient::dsrCCA(o, 'D.num', input$cca_vars_x, input$cca_vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 #res = dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 dsCOVclient::dsPlotVar(res, title = 'Correlation circle plots from federated CCA')
@@ -1953,10 +1953,10 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               })
             }else if(input$plotType == "princomp"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Principal Component Analysis (PCA) on current table..\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'Variables', 
-                                  input$knn_vars_x,
-                                  vars);
               tryCatch({
+                get.vars.as.numeric(o, 'D', 'Variables', 
+                                    input$knn_vars_x,
+                                    vars);
                 princomp <- dsSwissKnifeClient::dssPrincomp(df='Variables', type="combine", 
                                                             center=T, scale=F,
                                                             scores.suffix='.scores',
@@ -1998,8 +1998,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               })
             }else if(input$plotType == "randomforest"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
-              get.vars.as.numeric(o, 'D', 'D.num', c(input$rf_var_y, input$rf_vars), vars);
               tryCatch({
+                get.vars.as.numeric(o, 'D', 'D.num', c(input$rf_var_y, input$rf_vars), vars);
                 rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$rf_var_y, expl_vars=input$rf_vars, localImp=T),
                                                             async=F, datasources=o);
                 globalValues$last_RFS <- rfs;
