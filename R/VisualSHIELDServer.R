@@ -257,6 +257,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         input$analysis
         input$var_target
         input$var_time
+        input$var_cohort
         input$var_explanatory
         input$null_var_explanatory
         input$familyFunction
@@ -1570,6 +1571,11 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               ns("var_time"),
               label = "Time variable",
               choices = NULL
+            ),
+            shiny::textAreaInput(
+              ns("var_cohort"),
+              label = "The curve(s) produced will be representative of a cohort \nwhose covariates correspond to the values set here. \nDefault is the mean of the covariates used in the coxph fit.",
+              placeholder = "sex = c(1, 2), age = rep(mean(lung$age, na.rm = TRUE), 2), ph.ecog = c(1, 1)"
             )
           ),
           shiny::conditionalPanel(
@@ -1966,10 +1972,22 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                                      iter.max = input$knn_max_iter, nstart = input$knn_start, 
                                                      datasources=o);
                 globalValues$last_KNN <- knn;
+                cluster.map.remote <- paste0('Variables_km_clust', input$knn_clusters);
+                # store to D dataframe for further analisys
+                dsBaseClient::ds.cbind(x=c(cluster.map.remote,'D'),
+                                       newobj='D',
+                                       notify.of.progress = F,
+                                       DataSHIELD.checks = F,
+                                       datasources=o)
+                adf <- data.frame(type=c("factor"))
+                row.names(adf) <- c(cluster.map.remote)
+                globalValues$ds.prj.vars<-rbind(adf, globalValues$ds.prj.vars)
+                
+                # plot the biplot (scores + loadings in the same plot)
                 dsSwissKnifeClient::biplot.dssPrincomp(princomp$global,
                                                        type="combine",
                                                        draw.arrows = T,
-                                                       levels = paste0('Variables_km_clust', input$knn_clusters),
+                                                       levels = cluster.map.remote,
                                                        datasources=o);
                 # == alternative way to compute PCA plot with client-side info. probably the cluster.map is wrong ==
                 #cluster.map <- apply(knn$global$centers, MARGIN=2, function(e){ names(which(e == min(e))) })
@@ -2139,9 +2157,18 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           time_var <- get.var.as.numeric(o, vars, input$var_time)
           output <- paste0("survival::Surv(",time_var,", ",model_vars$output,")")
           formula <- paste0(output," ~ ", model_vars$input)
-          cox.res <- dsSwissKnifeClient::dssCoxph(formula=formula,
-                                                  data='D',
-                                                  datasources=o)
+          if( is.null(input$var_cohort) || input$var_cohort == "" )
+            cox.res <- dsSwissKnifeClient::dssCoxph(formula=formula,
+                                                    data='D',
+                                                    async=F,
+                                                    datasources=o)
+          else
+            # use cohort description
+            cox.res <- dsSwissKnifeClient::dssCoxph(formula=formula,
+                                                    new.dataframe = input$var_cohort,
+                                                    data='D',
+                                                    async=F,
+                                                    datasources=o)
           cox.res
         })
         
@@ -2159,8 +2186,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           if ( input$analysis == 'coxp' ) {
             tryCatch({
               cox.res <- get.ds.cox.full.model()
+              # cox.res[[serv]]$model$coefficients
               elems <- lapply(names(o), function(serv){
-                shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(cox.res[[serv]]$model$coefficients), collapse="\n") ,'</pre>'))
+                shiny::HTML(paste0('<div>Model summary on ',serv,':</div><pre>', paste(capture.output(cox.res[[serv]]$model), collapse="\n") ,'</pre>'))
               })
             },
             error=function(cond){
@@ -2299,7 +2327,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           # not used, just a sanity check that code can be parsed
           parsed<-parse(text=incode)[[1]]
           dsBaseClient::ds.assign(toAssign = incode, newobj = new_col_name, datasources=o)
-          dsBaseClient::ds.cbind(x=c('D', new_col_name),
+          dsBaseClient::ds.cbind(x=c(new_col_name,'D'),
                                    newobj='D',
                                    notify.of.progress = F,
                                    DataSHIELD.checks = F,
@@ -2319,7 +2347,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           # update dataframe of variables
           adf <- data.frame(type=c("numeric"))
           row.names(adf) <- c(new_col_name)
-          globalValues$ds.prj.vars<-rbind(globalValues$ds.prj.vars, adf)
+          globalValues$ds.prj.vars<-rbind(adf, globalValues$ds.prj.vars)
         }
         
         output$storeResult <- shiny::renderUI({
