@@ -500,6 +500,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       })
       
       get.ds.size <- shiny::reactive({
+        if( is.null(input$load) || !input$load)
+          return(NULL)
+        
         o <- get.ds.login()
         
         tryCatch({
@@ -935,7 +938,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       })
       
       is.analysis.ready <- shiny::reactive({
-        !is.null(get.ds.project.table.variables()) && !is.null(get.ds.size())
+        tables.ready <- shiny::isolate({ !is.null(get.ds.project.table.variables()) })
+        !is.null(get.ds.size()) && tables.ready
       })
       
       # ------------- VARIABLES USED FOR CONDITIONALPANEL
