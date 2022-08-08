@@ -1630,7 +1630,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               shiny::column(width=3,
               	shiny::downloadButton(ns("downloadPRINCOMP"), "Download PCA as an RDS")),
 	            shiny::column(width=3,
-                shiny::downloadButton(ns("downloadKNN"), "Download K-NN model computed on PCA as an RDS"))
+                shiny::downloadButton(ns("downloadKNN"), "Download K-NN model as an RDS"))
             )
           }else if ( input$plotType == "cor") {
             shiny::downloadButton(ns("downloadCOR"), "Download correlation matrix as an RDS")
@@ -1973,6 +1973,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                                      datasources=o);
                 globalValues$last_KNN <- knn;
                 cluster.map.remote <- paste0('Variables_km_clust', input$knn_clusters);
+                
                 # store to D dataframe for further analisys
                 dsBaseClient::ds.cbind(x=c(cluster.map.remote,'D'),
                                        newobj='D',
@@ -2217,7 +2218,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           if ( input$analysis == 'coxp' ) {
             tryCatch({
               cox.res <- get.ds.cox.full.model()
-              graphics::par(col.main="white", col.lab="white", mfrow = c(length(names(o)),1) )
+              #graphics::par(col.main="white", col.lab="white", mfrow = c(length(names(o)),1) )
               for( serv in names(o) ){
                 # access model without reason, 
                 # silly, but otherwise for no reason sometimes plot doesn't work

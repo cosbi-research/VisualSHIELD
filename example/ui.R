@@ -4,7 +4,7 @@ library(opalr)
 library(DSI)
 library(DSOpal)
 library(dsBaseClient)
-library(dsCOVclient)
+#library(dsCOVclient)
 #library(VisualSHIELD)
 
 #source("../R/client_func.R")
