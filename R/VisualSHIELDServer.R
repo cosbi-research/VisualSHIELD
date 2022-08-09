@@ -2018,8 +2018,14 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
             }else if(input$plotType == "randomforest"){
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
               tryCatch({
-                get.vars.as.numeric(o, 'D', 'D.num', c(input$rf_var_y, input$rf_vars), vars);
-                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.num', dep_var=input$rf_var_y, expl_vars=input$rf_vars, localImp=T),
+                rf_output_var <- get.var.as.factor(o, vars, input$rf_var_y)
+                get.vars.as.numeric(o, 'D', 'D.num', input$rf_vars, vars);
+                dsBaseClient::ds.cbind(x=c(rf_output_var,'D.num'),
+                                       newobj='D.rf',
+                                       notify.of.progress = F,
+                                       DataSHIELD.checks = F,
+                                       datasources=o)
+                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.rf', dep_var=rf_output_var, expl_vars=input$rf_vars, localImp=T),
                                                             async=F, datasources=o);
                 globalValues$last_RFS <- rfs;
                 #min_depth_frame <- randomForestExplainer::min_depth_distribution(rfs[[1]])
