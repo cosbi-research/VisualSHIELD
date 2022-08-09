@@ -33,7 +33,7 @@ We'll be happy to help!
 
 On an R console just type
 ```
-remotes::install_github('cosbi-research/VisualSHIELD@main')
+remotes::install_github('cosbi-research/VisualSHIELD@main', repos=c(getOption('repos'), 'http://cran.datashield.org', 'https://bioconductor.org/packages/3.3/bioc', 'https://bioconductor.org/packages/3.3/data/annotation','https://bioconductor.org/packages/3.3/data/experiment','https://bioconductor.org/packages/3.3/extra'))
 ```
 
 # Self Hosting
