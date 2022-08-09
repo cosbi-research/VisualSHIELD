@@ -40,7 +40,7 @@ If it fails, it may be because you don't have some headers for compiling the dep
 On ubuntu, try to install these headers, and then try again:
 
 ```
-sudo apt install libssl-dev libcurl4-openssl-dev libxml2-dev
+sudo apt install libssl-dev libcurl4-openssl-dev libxml2-dev cmake
 ```
 
 # Self Hosting
