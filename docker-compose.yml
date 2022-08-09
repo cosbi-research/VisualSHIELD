@@ -18,24 +18,14 @@ services:
 
   rock:
     #image: datashield/rock-base:latest
-    build: cosbi/rock-visualshield
+    image: cosbi/rock-visualshield
     ports:
       - 8085:8085
     environment:
       - ROCK_ID=default-1
       - ROCK_CLUSTER=default
     volumes:
-      - C:\Users\Tomasoni\git\VisualSHIELD\rock\conf:/srv/conf
-  mongo-express:
-    image: mongo-express
-    depends_on:
-      - mongo
-    ports:
-      - 8081:8081
-    environment:
-#      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-#      ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/
+      - /home/tomasoni/git/VisualSHIELD/rock/conf:/srv/conf
       
   mongo:
     image: mongo:4.2
