@@ -33,11 +33,12 @@ We'll be happy to help!
 
 On an R console just type
 ```
+remotes::install_github('sib-swiss/dsSwissKnifeClient')
 remotes::install_github('cosbi-research/VisualSHIELD@main', build_vignettes = TRUE, repos=c(getOption('repos'), 'http://cran.datashield.org', 'https://bioconductor.org/packages/3.3/bioc', 'https://bioconductor.org/packages/3.3/data/annotation','https://bioconductor.org/packages/3.3/data/experiment','https://bioconductor.org/packages/3.3/extra'))
 ```
 
 If it fails, it may be because you don't have some headers for compiling the dependencies. 
-On ubuntu, try to install these headers, and then try again:
+On ubuntu, try install these headers, and then try again:
 
 ```
 sudo apt install libssl-dev libcurl4-openssl-dev libxml2-dev cmake
@@ -88,17 +89,25 @@ see the [Manual installation manual](SETUP_OPAL.md) for instructions on how to m
 Make sure to have a (network of) OPAL server along with your secure credentials to integrate in the following analyses. For a demo, you can use https://opal-demo.obiba.org .
 
 The VisualSHIELD module offers pre-built UI and logic for:
-* analisis selection
-* tabular result presentation
-* ...
-* XXXX
+* selection of remote datasets to be jointly analyzed, from one or more opal servers.
+* Federated data manipulation
+* Federated data analysis
 
-The analysis is performed through the privacy-aware [DataSHIELD](https://www.datashield.ac.uk/) analysis package, and allows to easily perform:
+The data manipulation is an interface that allows to add new columns to the datasets being analyzed, based on linear combinations or complex functions of the existing columns.
+
+The analysis is performed through the privacy-aware [DataSHIELD](https://www.datashield.ac.uk/) analysis package, as well as the dsSwissKnife from Swiss Institute for Bioinformatics (SIB), 
+and allows to easily perform:
 * histograms
+* box-plot
+* principal component analysis (PCA)
+* K-nearest neighbors (K-NN)
+* Correlation matrix
+* Random Forest for classification/regression
 * contour plots
 * heatmaps
 * linear models (lm)
 * generalized linear models (glm)
+* survival analysis (kaplan-meier curves, and COX models)
 
 VisualSHIELD module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. 
 
