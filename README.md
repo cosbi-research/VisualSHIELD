@@ -33,7 +33,14 @@ We'll be happy to help!
 
 On an R console just type
 ```
-remotes::install_github('cosbi-research/VisualSHIELD@main')
+remotes::install_github('cosbi-research/VisualSHIELD@main', repos=c(getOption('repos'), 'http://cran.datashield.org', 'https://bioconductor.org/packages/3.3/bioc', 'https://bioconductor.org/packages/3.3/data/annotation','https://bioconductor.org/packages/3.3/data/experiment','https://bioconductor.org/packages/3.3/extra'))
+```
+
+If it fails, it may be because you don't have some headers for compiling the dependencies. 
+On ubuntu, try to install these headers, and then try again:
+
+```
+sudo apt install libssl-dev libcurl4-openssl-dev libxml2-dev cmake
 ```
 
 # Self Hosting
