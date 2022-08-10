@@ -30,7 +30,7 @@ services:
   mongo:
     image: mongo:4.2
     command: --serviceExecutor adaptive --wiredTigerCacheSizeGB 2
-    restart: always
+#    restart: always
     deploy:
       resources:
         limits:
