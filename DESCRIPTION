@@ -29,8 +29,7 @@ Suggests:
     survival (>= 3.2),
     knitr,
     rmarkdown
-Remotes:
-    github::sib-swiss/dsSwissKnifeClient,
+Remotes: github::sib-swiss/dsSwissKnifeClient,
 	  github::vanduttran/dsCOVclient@main
 Encoding: UTF-8
 LazyData: true
