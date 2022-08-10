@@ -10,14 +10,11 @@ VisualSHIELD development contribuited to the [ENPADASI](https://www.dtls.nl/wp-c
 
 VisualSHIELD is a shiny app module offering ready-to-use self-contained UI and logic to be easily integrated in your custom Shiny App. 
 
-See XXX SCREENSHOTS or XXX LIVE DEMO.
-
 This repository contains the reference implementation for VisualSHIELD. You may freely use this work in your research and activities under the BSD 3-Clause License (see LICENSE file).
 
-For more information and guided hands-on tutorials on how everything can be systematically glued together, as in the ENPADASI project, check out the [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) 
-or get in touch with the [Cosbi Bioinformatics lab](bioinformatics@cosbi.eu)
+For more information and guided hands-on tutorials on how everything can be systematically glued together, see the [usage](#usage) section or get in touch with the [Cosbi Bioinformatics lab](bioinformatics@cosbi.eu). We'll be happy to help!
 
-We'll be happy to help!
+Further readings: [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) 
 
 ## Table of contents
 
