@@ -118,7 +118,7 @@ VisualSHIELDUI <- function(id, title){
                                                                               
                                                                               # plot for explorative analysis
                                                                               shiny::conditionalPanel(
-                                                                                condition = paste0("input['",ns('plotType'),"'] == 'hist' || input['",ns('plotType'),"'] == 'contour' || input['",ns('plotType'),"'] == 'heatmap' || input['",ns('plotType'),"'] == 'boxplot' || input['",ns('plotType'),"'] == 'correlation' || input['",ns('plotType'),"'] == 'cor' || input['",ns('plotType'),"'] == 'princomp' || input['",ns('plotType'),"'] == 'randomforest' || input['",ns('plotType'),"'] == 'vim'"),
+                                                                                condition = paste0("input['",ns('plotType'),"'] == 'hist' || input['",ns('plotType'),"'] == 'contour' || input['",ns('plotType'),"'] == 'heatmap' || input['",ns('plotType'),"'] == 'boxplot' || input['",ns('plotType'),"'] == 'correlation' || input['",ns('plotType'),"'] == 'cor' || input['",ns('plotType'),"'] == 'princomp' || input['",ns('plotType'),"'] == 'randomforest' || input['",ns('plotType'),"'] == 'vim'|| input['",ns('plotType'),"'] == 'glm_feature_selection'"),
                                                                                 
                                                                                 shiny::uiOutput(outputId = ns("plotStatus")),
                                                                                 shiny::plotOutput(ns("distPlot")),

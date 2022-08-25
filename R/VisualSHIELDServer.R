@@ -153,6 +153,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           }else if(input$plotType == 'randomforest'){
             var_y <- input$rf_var_y
             vars_x <- input$rf_vars
+          }else if(input$plotType == 'glm_feature_selection'){
+            var_y <- input$glm_fs_var_y
+            vars_x <- input$glm_fs_vars
           }else if(input$plotType == 'contour'){
             var_x <- input$contour_var_x
             var_y <- input$contour_var_y
@@ -284,6 +287,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         input$contour_var_y
         input$rf_vars
         input$rf_var_y
+        input$glm_fs_vars
+        input$glm_fs_var_y
         input$cca_vars_x
         input$cca_vars_y
         input$cca_lambda1
@@ -304,6 +309,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         globalValues$last_RFSTEST <- NA
         globalValues$last_KNN <- NA
         globalValues$last_PRINCOMP <- NA
+        globalValues$last_GLM_FS <- NA
         globalValues$last_COR <- NA
       })
       
@@ -342,6 +348,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         }else if(input$plotType == 'randomforest'){
           updateSelectizeInput(session, 'rf_var_y', choices = varnames, selected=old_var_y, server = TRUE)
           updateSelectizeInput(session, 'rf_vars', choices = varnames, selected=old_vars_x, server = TRUE)
+        }else if(input$plotType == 'glm_feature_selection'){
+          updateSelectizeInput(session, 'glm_fs_var_y', choices = varnames, selected=old_var_y, server = TRUE)
+          updateSelectizeInput(session, 'glm_fs_vars', choices = varnames, selected=old_vars_x, server = TRUE)
         }else if(input$plotType == 'contour'){
           updateSelectizeInput(session, 'contour_var_x', choices = varnames, selected=old_var_x, server = TRUE)
           updateSelectizeInput(session, 'contour_var_y', choices = varnames, selected=old_var_y, server = TRUE)
@@ -424,6 +433,17 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         selected<- updateFieldFromFile('rf_vars', f)
         globalValues$old_vars_x <- selected
         globalValues$serverInputs[['rf_vars']]<-selected
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      
+      shiny::observeEvent({
+        input$input_glm_fs_vars
+      },{
+        f <- input$input_glm_fs_vars
+        req(f)
+        
+        selected<- updateFieldFromFile('glm_fs_vars', f)
+        globalValues$old_vars_x <- selected
+        globalValues$serverInputs[['glm_fs_vars']]<-selected
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       ### END LOAD LIST OF FIELDS TO ANALYZE FROM FILE ###
       
@@ -1336,6 +1356,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                            "Correlation"  = "cor",
                            "Canonical Correlation"  = "correlation",
                            "Data imputation" = "vim",
+                           "Feature selection" = "glm_feature_selection",
                            "Analisys"     = "analisys")
           )
         } 
@@ -1517,7 +1538,37 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               ),
 	      shiny::HTML("For further informations see <a href=\"https://modeloriented.github.io/randomForestExplainer/articles/randomForestExplainer.html#multi-way-importance-plot-1\" target=\"_blank\">Multi-way importance plot</a>")
             ),
-            shiny::conditionalPanel(
+	      shiny::conditionalPanel(
+	        condition = paste0("input['",ns('plotType'),"']  == 'glm_feature_selection'"),
+  	        shiny::selectInput(
+  	          ns("glmFsFamilyFunction"),
+  	          label = "Output distribution",
+  	          choices = list("Binomial (link=logistic)" = "binomial",
+  	                         "Poisson (link=log)" = "poisson",
+  	                         "Identity (link=gaussian)"="gaussian"),
+  	          multiple=F
+            ),
+  	        shiny::selectizeInput(ns("glm_fs_var_y"),
+  	                              "Response factor",
+  	                              NULL,
+  	                              selected=NULL
+  	        ),
+  	        fluidRow(
+  	          shiny::column(width=11,
+  	                        shiny::selectizeInput(ns("glm_fs_vars"), "Classification variables",
+  	                                              choices=NULL,
+  	                                              multiple=T
+  	                        ),
+  	          ),
+  	          shiny::column(width=1,
+  	                        customFileInput(ns("input_glm_fs_vars"), "", labelIcon = "folder-open-o", 
+  	                                        accept = c("text/csv",
+  	                                                   "text/comma-separated-values,text/plain",
+  	                                                   ".csv"), progress = FALSE)
+  	          )
+  	        )
+	      ),
+	      shiny::conditionalPanel(
               condition = paste0("input['",ns('plotType'),"']  == 'hist'"),
               
               shiny::selectInput(ns("hist_var"),
@@ -1669,6 +1720,11 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
 	            shiny::column(width=3,
                 shiny::downloadButton(ns("downloadKNN"), "Download K-NN model as an RDS"))
             )
+          }else if ( input$plotType == "glm_feature_selection") {
+            shiny::fluidRow(
+              shiny::column(width=3,
+                            shiny::downloadButton(ns("downloadGLMFS"), "Download as an RDS"))
+            )
           }else if ( input$plotType == "cor") {
             shiny::downloadButton(ns("downloadCOR"), "Download correlation matrix as an RDS")
           }else{
@@ -1745,6 +1801,16 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         },
         content = function(file) {
           saveRDS(globalValues$last_PRINCOMP, file=file)
+        }
+      )
+      
+      output$downloadGLMFS <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          paste0(paste(names(o), collapse="-"), "-GLM-FS.rds")
+        },
+        content = function(file) {
+          saveRDS(globalValues$last_GLM_FS, file=file)
         }
       )
       
@@ -1936,6 +2002,70 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               warning=function(cond){
                 cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
               })
+            } else if ( input$plotType == "glm_feature_selection") {
+              cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing GLM-based feature selection on ", input$vim_vars,"\n"), file=LOG_FILE, append=TRUE)
+
+              if(length(globalValues$serverInputs[['glm_fs_vars']]) > 1000 && length(input$glm_fs_vars) == 1000)
+                # we reached the visualization limit.. but should use anyway all the selected values
+                glm_fs_vars <- globalValues$serverInputs[['glm_fs_vars']]
+              else
+                glm_fs_vars <- input$glm_fs_vars
+              family<-input$glmFsFamilyFunction
+              output_var <- get.model.output.var(input$glm_fs_var_y, 'glm', family, vars, o)
+              
+              if(is.null(assume.columns.type) || !(assume.columns.type %in% c("numeric","integer")))
+                vars_num<-sapply(glm_fs_vars, function(varname){
+                  get.var.as.numeric(o, vars, varname)
+                })
+              else
+                vars_num <- paste0('D$',glm_fs_vars)
+              
+              # Detect the number of available cores and create cluster
+              #cl <- parallel::makeCluster(parallel::detectCores()-1)
+              glm.imp <- sapply(vars_num, function(varname){
+                glm_model <- tryCatch({
+                    dsBaseClient::ds.glm(formula=paste0(output_var," ~ ", varname), 
+                                         family=family,
+                                         maxit=glm_max_iterations,
+                                         datasources = o)
+                },
+                error=function(cond){
+                  errs <- DSI::datashield.errors()
+                  if( is.null(errs) )
+                    stop(cond)
+                  else
+                    stop(errs)
+                },
+                warning=function(cond){
+                  cat(paste0(Sys.time()," ", cond,'\n'), file=LOG_FILE, append=TRUE)
+                })
+                
+                coef<-data.frame(glm_model$coefficients)
+                # first one is intercept
+                pval<- coef[,'p.value'][[2]]
+                beta<- coef[,'Estimate'][[2]]
+                name=gsub("D\\$([a-zA-Z0-9^_.]+)", "\\1", varname)
+                return(list(name=name, beta=beta, p.value=pval))
+              })
+              
+              glm.imp.df <- as.data.frame(t(glm.imp))
+              glm.imp.df$beta<-as.numeric(glm.imp.df$beta)
+              glm.imp.df$p.value<-as.numeric(glm.imp.df$p.value)
+              glm.imp.df$name<-as.character(glm.imp.df$name)
+              
+              # non-relevant names are removed
+              glm.imp.df$relevant.beta <- 'NO'
+              glm.imp.df[abs(glm.imp.df$beta) < 0.5 & glm.imp.df$p.value > 0.05, 'name'] <- NA
+              glm.imp.df[glm.imp.df$beta >= 0 & glm.imp.df$beta >= 0.5, 'relevant.beta'] <- 'POSITIVE'
+              glm.imp.df[glm.imp.df$beta < 0 & glm.imp.df$beta <= -0.5, 'relevant.beta'] <- 'NEGATIVE'
+              
+              globalValues$last_GLM_FS <- glm.imp.df;
+              
+              ggplot2::ggplot(data=glm.imp.df, ggplot2::aes(x=beta, y=-log10(p.value), col=relevant.beta, label=name)) + 
+                ggplot2::geom_point() + 
+                ggplot2::theme_minimal() +
+                ggplot2::geom_text()
+              
             } else if ( input$plotType == "vim") {
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing NA imputation (VIM) on ", input$vim_vars,"\n"), file=LOG_FILE, append=TRUE)
               
