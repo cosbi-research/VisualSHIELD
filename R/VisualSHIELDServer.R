@@ -59,7 +59,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
   customFileInput <- function(inputId, label = NULL, labelIcon = NULL, multiple = FALSE, 
                          accept = NULL, width = NULL, progress = TRUE, ...) {
     # add class fileinput_2 defined in UI to hide the inputTag
-    inputTag <- shiny::tags$input(id = inputId, name = inputId, type = "file", 
+    inputTag <- shiny::tags$input(id = inputId, name = inputId, type = "file", title="This element is limited to 1000 selection. \nUploaded files with more than 1000 elements will be stored and used server-side but not displayed.", 
                            class = "fileinput_custom", style="display:none;")
     if (multiple) 
       inputTag$attribs$multiple <- "multiple"
@@ -70,7 +70,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         inputTag,
         # label customized with an action button
         shiny::tags$label(`for` = inputId, div(icon(labelIcon), label, 
-                                        class = "btn btn-default action-button", style="margin-top: 25px; margin-left: -20px;")),
+                                        class = "btn btn-default action-button", style="margin-top: 25px; margin-left: -25px;")),
         # optionally display a progress bar
         if(progress)
           shiny::tags$div(id = paste(inputId, "_progress", sep = ""), 
@@ -87,6 +87,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       extraComboBoxes <- list()
       globalValues <- shiny::reactiveValues()
       globalValues$ds.prj.vars <- NULL
+      # when users select with fileInput, the complete list of values is stored here.
+      globalValues$serverInputs<-list()
       available_glm_models = list("identity","logistic","log")
       names(available_glm_models) <- c("gaussian","binomial","poisson")
       
@@ -299,6 +301,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
 
         globalValues$showPlot <- FALSE
         globalValues$last_RFS <- NA
+        globalValues$last_RFSTEST <- NA
         globalValues$last_KNN <- NA
         globalValues$last_PRINCOMP <- NA
         globalValues$last_COR <- NA
@@ -359,11 +362,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       updateFieldFromFile <- function(fieldId, input_value){
         selected <- readLines(input_value$datapath)
         if( length(selected) == 0 )
-          return()
+          return(selected)
         
         vars <- get.ds.project.table.variables()
         varnames <- get.input.named.vars(vars)
-        updateSelectizeInput(session, fieldId, choices = varnames, selected=selected, server = TRUE)
+        # only the first 1000 will be set, the others will be stored in a reactive value
+        updateSelectizeInput(session, fieldId, choices = varnames, selected=selected, server = TRUE, options = list(maxOptions = 1000))
         return(selected)
       }
       
@@ -375,6 +379,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         
         selected<- updateFieldFromFile('box_vars', f)
         globalValues$old_vars_x <- selected
+        globalValues$serverInputs[['box_vars']]<-selected
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
       shiny::observeEvent({
@@ -385,6 +390,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         
         selected<- updateFieldFromFile('knn_vars_x', f)
         globalValues$old_vars_x <- selected
+        globalValues$serverInputs[['knn_vars_x']]<-selected
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
       shiny::observeEvent({
@@ -395,6 +401,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         
         selected<- updateFieldFromFile('cca_vars_x', f)
         globalValues$old_vars_x <- selected
+        globalValues$serverInputs[['cca_vars_x']]<-selected
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
       shiny::observeEvent({
@@ -405,6 +412,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         
         selected<- updateFieldFromFile('cca_vars_y', f)
         globalValues$old_vars_y <- selected
+        globalValues$serverInputs[['cca_vars_y']]<-selected
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       
       shiny::observeEvent({
@@ -415,6 +423,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         
         selected<- updateFieldFromFile('rf_vars', f)
         globalValues$old_vars_x <- selected
+        globalValues$serverInputs[['rf_vars']]<-selected
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
       ### END LOAD LIST OF FIELDS TO ANALYZE FROM FILE ###
       
@@ -438,6 +447,23 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
       # otherwise it will cache the result and returns each time the same value
       # reactive block will be re-executed only on input change
       # otherwise it will cache the result and returns each time the same value
+      
+      get.ds.tables <- shiny::reactive({
+        my_login <- get.login.dataframe()
+        tables <- list()
+        servers <- c()
+        for(i in seq(nrow(my_login))){
+          # tables to load
+          tables[[i]] <- as.character(my_login[i, ]$table)
+          curserver <- my_login[i, ]$server_name;
+          if( curserver %in% servers ){
+            curserver <- paste0(curserver, i)
+          }
+          servers <- c(servers, curserver)
+          names(tables)[[i]] <- as.character(curserver)
+        }
+        return(tables)
+      })
       
       get.ds.login <- shiny::reactive({
         if ( is.load.ready() ) {
@@ -1463,6 +1489,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
+                                              "Accuracy decrease"="accuracy_decrease",
+                                              "Gini decrease"="gini_decrease",
                                               "P-value"="p_value"),
               ),
               shiny::selectInput(ns("y_measure"), "Importance plot Y axis",
@@ -1472,6 +1500,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
+                                              "Accuracy decrease"="accuracy_decrease",
+                                              "Gini decrease"="gini_decrease",
                                               "P-value"="p_value")
               ),
               shiny::selectInput(ns("size_measure"), "Importance plot dot-size",
@@ -1481,6 +1511,8 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                               "Increase in MSE"="mse_increase",
                                               "Increase in node purity"="node_purity_increase",
                                               "Times as a root"="times_a_root",
+                                              "Accuracy decrease"="accuracy_decrease",
+                                              "Gini decrease"="gini_decrease",
                                               "P-value"="p_value")
               ),
 	      shiny::HTML("For further informations see <a href=\"https://modeloriented.github.io/randomForestExplainer/articles/randomForestExplainer.html#multi-way-importance-plot-1\" target=\"_blank\">Multi-way importance plot</a>")
@@ -1624,7 +1656,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           return(shiny::tagList(shiny::span("")))
         shiny::isolate({
           if ( input$plotType == "randomforest") {
-            shiny::downloadButton(ns("downloadRFS"), "Download Random Forests model as an RDS")
+            shiny::fluidRow(
+              shiny::column(width=4,
+                            shiny::downloadButton(ns("downloadRFS"), "Download RFs model as an RDS")),
+              shiny::column(width=4,
+                            shiny::downloadButton(ns("downloadRFSTEST"), "Download RFs evaluation as an RDS"))
+            )
           }else if ( input$plotType == "princomp") {
             shiny::fluidRow(
               shiny::column(width=3,
@@ -1690,7 +1727,17 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           saveRDS(globalValues$last_RFS, file=file)
         }
       )
-      
+
+      output$downloadRFSTEST <- shiny::downloadHandler(
+        filename = function() {
+          o <- get.ds.login()
+          paste0(paste(names(o), collapse="-"), "-RandomForests-Tests.rds")
+        },
+        content = function(file) {
+          saveRDS(globalValues$last_RFSTEST, file=file)
+        }
+      )
+
       output$downloadPRINCOMP <- shiny::downloadHandler(
         filename = function() {
           o <- get.ds.login()
@@ -1876,7 +1923,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing box-plot on ", input$box_vars,"\n"), file=LOG_FILE, append=TRUE)
               
               tryCatch({
-                get.vars.as.numeric(o, 'D', 'D.num', input$box_vars, vars);
+                get.vars.as.numeric(o, 'D', 'D.num', input$box_vars, vars, assume.columns.type);
                 dsBaseClient::ds.boxPlot(datasources=o, x='D.num', variables=input$box_vars, type="pooled")
               },
               error=function(cond){
@@ -1913,7 +1960,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               
             } else if ( input$plotType == "cor") {
               tryCatch({
-                get.vars.as.numeric(o, 'D', 'D.num', input$cca_vars_x, vars);
+                get.vars.as.numeric(o, 'D', 'D.num', input$cca_vars_x, vars, assume.columns.type);
                 vars.cor.opal <- dsBaseClient::ds.cor("D.num", type="combine", datasources = o)
                 vars.cor <- vars.cor.opal[["Correlation Matrix"]]
                 globalValues$last_COR <- vars.cor
@@ -1940,7 +1987,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing CCA on ", input$cca_vars_x," against ", input$cca_vars_y, "\n"), file=LOG_FILE, append=TRUE)
 
               tryCatch({
-                get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars);
+                get.vars.as.numeric(o, 'D', 'D.num', c(input$cca_vars_x, input$cca_vars_y), vars, assume.columns.type);
                 res = dsCOVclient::dsrCCA(o, 'D.num', input$cca_vars_x, input$cca_vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 #res = dsrCCA(o, 'D.num', input$vars_x, input$vars_y, lambda1 = input$cca_lambda1, lambda2 = input$cca_lambda2)
                 dsCOVclient::dsPlotVar(res, title = 'Correlation circle plots from federated CCA')
@@ -1962,7 +2009,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               tryCatch({
                 get.vars.as.numeric(o, 'D', 'Variables', 
                                     input$knn_vars_x,
-                                    vars);
+                                    vars, assume.columns.type);
                 princomp <- dsSwissKnifeClient::dssPrincomp(df='Variables', type="combine", 
                                                             center=T, scale=F,
                                                             scores.suffix='.scores',
@@ -2019,15 +2066,46 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               cat(paste0(Sys.time(),"  ","User ",globalValues$username," is performing Random Forest training on current table..\n"), file=LOG_FILE, append=TRUE)
               tryCatch({
                 rf_output_var <- get.var.as.factor(o, vars, input$rf_var_y)
-                get.vars.as.numeric(o, 'D', 'D.num', input$rf_vars, vars);
-                dsBaseClient::ds.cbind(x=c(rf_output_var,'D.num'),
+                if(length(globalValues$serverInputs[['rf_vars']]) > 1000 && length(input$rf_vars) == 1000)
+                  # we reached the visualization limit.. but should use anyway all the selected values
+                  rf_vars <- globalValues$serverInputs[['rf_vars']]
+                else
+                  rf_vars <- input$rf_vars
+                get.vars.as.numeric(o, 'D', 'D.rf', rf_vars, vars, assume.columns.type);
+                dsBaseClient::ds.cbind(x=c(rf_output_var,'D.rf'),
                                        newobj='D.rf',
                                        notify.of.progress = F,
                                        DataSHIELD.checks = F,
                                        datasources=o)
-                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.rf', dep_var=rf_output_var, expl_vars=input$rf_vars, localImp=T),
+                rfs <- dsSwissKnifeClient::dssRandomForest(train=list(what='D.rf', dep_var=rf_output_var, expl_vars=rf_vars, localImp=T),
                                                             async=F, datasources=o);
                 globalValues$last_RFS <- rfs;
+                # global accuracy test
+                rfs.test <- dsSwissKnifeClient::dssRandomForest(test=list(forest=rfs, testData='D.rf'), async=F, datasources = o);
+                # n-way cross-validation test, leave-1-table-out
+                #tables<-get.ds.tables()
+                #if(length(tables)>1){
+                #  test.o <- o[1]
+                #  cross.validated <- lapply(tables, function(l){
+                #    # test on dataset l, using forests trained on the other datasets
+                #    browser();
+                #    DSI::datashield.assign.table(test.o, symbol = 'T',
+                #                                 table = l)
+                #    # test using the randomforests not trained on this dataset
+                #    rmodel <- rfs
+                #    n<-names(tables)[tables == l]
+                #    rmodel[[n]]<-NULL # temporarly remove randomforest trained on this dataset
+                #    dsSwissKnifeClient::dssRandomForest(test=list(forest=rmodel, testData='T'), async=F, datasources = test.o)
+                #  })
+                #  rfs.test[['leave.1.out.cross.validation']]<-cross.validated
+                #}
+                globalValues$last_RFSTEST <- rfs.test;
+                ## combine list of randomforests in a single randomforest
+                #rf<-do.call(randomForest::combine,rfs)
+                ## save in last_RFEXPLAIN
+                #globalValues$last_RFSEXPLAIN <- paste0(tempfile(), '.html');
+                #randomForestExplainer::explain_forest(rf, path=globalValues$last_RFSEXPLAIN);
+                
                 #min_depth_frame <- randomForestExplainer::min_depth_distribution(rfs[[1]])
                 #randomForestExplainer::plot_min_depth_distribution(min_depth_frame)
                 importance_frame <- randomForestExplainer::measure_importance(rfs[[1]])
@@ -2466,20 +2544,27 @@ get.var.as.numeric <- function(o, vars, var){
 }
 
 # convert D table to D_num with all the columns of D converted to numeric
-get.vars.as.numeric <- function(o, in_df, out_df, vars, in_df_var_types){
-  get.vars.as(o, in_df, out_df, vars, in_df_var_types, c("numeric","integer"), "")
+get.vars.as.numeric <- function(o, in_df, out_df, vars, in_df_var_types, assume.columns.type){
+  get.vars.as(o, in_df, out_df, vars, in_df_var_types, c("numeric","integer"), "", assume.columns.type)
 }
 
-get.vars.as <- function(o, in_df, out_df, vars, in_df_var_types, target_types, target_suffix){
-  vars_num<-sapply(vars, function(varname){
-    get.var.as(o, in_df, target_types, target_suffix, in_df_var_types, varname)
-  })
-  dsBaseClient::ds.dataFrame(x=as.character(vars_num), 
+get.vars.as <- function(o, in_df, out_df, vars, in_df_var_types, target_types, target_suffix, assume.columns.type){
+  if(is.null(assume.columns.type) || !(assume.columns.type %in% target_types)){
+    vars_num<-sapply(vars, function(varname){
+      get.var.as(o, in_df, target_types, target_suffix, in_df_var_types, varname)
+    })
+    dsBaseClient::ds.dataFrame(x=as.character(vars_num), 
                              #row.names = names(vars_num), 
                              stringsAsFactors = F,
+                             check.names = F,
                              newobj=out_df,
                              notify.of.progress = F,
+                             DataSHIELD.checks=F,
                              datasources=o)
+  }else{
+    # just copy
+    dsBaseClient::ds.assign(toAssign = in_df, newobj = out_df, datasources=o)
+  }
 }
 
 get.var.as <- function(o, in_df, target_types, target_suffix, in_df_var_types, var){
