@@ -11,13 +11,24 @@ shinyServer(function(input, output, session) {
                   # server 1
                   list(
                           opal_server = list(id = "1",
-                                             name = "DEMO",
-                                             url = input$custom_server,
+                                             name = "Server1",
+                                             url = input$custom_server_1,
                                              username = "administrator",
                                              password = "password",
                                              certificate = NULL,
                                              private_key = NULL),
                           dashin_server = NULL # dbNP server whose studies will be migrated to the opal server defined above
+                  ),
+                  # server 2
+                  list(
+                    opal_server = list(id = "2",
+                                       name = "Server2",
+                                       url = input$custom_server_2,
+                                       username = "administrator",
+                                       password = "password",
+                                       certificate = NULL,
+                                       private_key = NULL),
+                    dashin_server = NULL # dbNP server whose studies will be migrated to the opal server defined above
                   )
                   #, ... server n
                 )
@@ -28,6 +39,9 @@ shinyServer(function(input, output, session) {
   VisualSHIELDServer("VisualSHIELD", servers=login, assume.columns.type="numeric")
 
   output$server <- renderUI({
-    textInput("custom_server", label="Server to connect to:", value="https://localhost:8843", placeholder = "https://opal-demo.obiba.org")
+    fluidRow(
+      column(5, textInput("custom_server_1", label="Server 1:", value="https://localhost:8843", placeholder = "https://opal-demo.obiba.org")),
+      column(5, textInput("custom_server_2", label="Server 2:", value="https://localhost:8843", placeholder = "https://opal-demo.obiba.org"))
+    )
   })
 })
