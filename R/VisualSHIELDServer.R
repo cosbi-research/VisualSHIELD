@@ -2054,10 +2054,14 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
               glm.imp.df$name<-as.character(glm.imp.df$name)
               
               # non-relevant names are removed
+              beta_values <- stats::quantile(glm.imp.df$beta, probs = c(0.01, 0.99))
+              p_value <- 0.05
+              
               glm.imp.df$relevant.beta <- 'NO'
-              glm.imp.df[abs(glm.imp.df$beta) < 0.5 & glm.imp.df$p.value > 0.05, 'name'] <- NA
-              glm.imp.df[glm.imp.df$beta >= 0 & glm.imp.df$beta >= 0.5, 'relevant.beta'] <- 'POSITIVE'
-              glm.imp.df[glm.imp.df$beta < 0 & glm.imp.df$beta <= -0.5, 'relevant.beta'] <- 'NEGATIVE'
+              glm.imp.df[glm.imp.df$beta >= 0 & (glm.imp.df$beta < beta_values[2] | glm.imp.df$p.value > p_value), 'name'] <- NA
+              glm.imp.df[glm.imp.df$beta >= 0 & glm.imp.df$beta >= beta_values[2] & glm.imp.df$p.value <= p_value, 'relevant.beta'] <- 'POSITIVE'
+              glm.imp.df[glm.imp.df$beta < 0 & (glm.imp.df$beta > beta_values[1] | glm.imp.df$p.value > p_value), 'name'] <- NA
+              glm.imp.df[glm.imp.df$beta < 0 & glm.imp.df$beta <= beta_values[1] & glm.imp.df$p.value <= p_value, 'relevant.beta'] <- 'NEGATIVE'
               
               globalValues$last_GLM_FS <- glm.imp.df;
               
