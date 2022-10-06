@@ -2572,8 +2572,12 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
         output$storeResult <- shiny::renderUI({
           if(is.null(estr))
             shiny::span(style="color:green; margin-top: 5px;", paste0("Variable '",new_col_name,"' is now ready to be used."))
-          else
-            shiny::span(style="color:red; margin-top: 5px;", estr)
+          else{
+            if(is.character(estr) & length(estr) == 1)
+              shiny::span(style="color:red; margin-top: 5px;", estr)
+            else
+              lapply(estr, function(e){shiny::div(style="color:red; margin-top: 5px;", e)})
+          }
         })
       }, ignoreInit = TRUE, ignoreNULL = FALSE)
     
