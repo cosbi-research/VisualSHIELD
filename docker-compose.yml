@@ -1,6 +1,6 @@
 services:
   opal:
-    image: obiba/opal:latest
+    image: obiba/opal:4.4
 #    build: opal
     ports:
       - "8870:8080"
