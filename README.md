@@ -125,24 +125,6 @@ Loading required package: progress
 Loading required package: R6
 ```
 
-# Tutorial: Perform an individual level meta-analysis (ILMA) using a generalized linear model (GLM)
-
-Perform the following steps to load your data into an opal server:
- * Access to your opal instance. If you don't have one, you can use the opal demo at obiba https://opal-demo.obiba.org (use administrator/password to login).
- * Upload on the opal server your data. You can also try our example data in the [data](example/data) folder.
-
-Now go back to the VisualSHIELD instance. 
-Once the app is running you can navigate to `http://127.0.0.1:4079` or any other link the shiny server is writing to the console.
-The example app will require you to insert the name of one opal server to connect to, insert the link to the opal server you loaded your data into (ex. https://opal-demo.obiba.org ). 
-
-Now click Update and the shiny module will be updated allowing you to select the data tables to analyze.
-From "Opal Projects" select the name of your project, from "Data tables" select the name of the first of the tables you want to analyze.
-Click "+" allows you to insert another project and another table, so that you can federate the analysis. 
-**NOTE**: This is a single-server demo, but complex settings are not limited to a single opal server.
-
-From now on we will assume you selected the example data tables Study.1 Study.2 Study.3 Study.4 Study.5 Study.6 .
-Now click "Setup remote data tables"
-
 ## Embed VisualSHIELD UI module in your Shiny App
 
 Embedding the UI in your custom shiny app is as simple as using VisualSHIELDUI in your page as any other shiny object. Below a simple
