@@ -25,7 +25,7 @@ services:
       - ROCK_ID=default-1
       - ROCK_CLUSTER=default
     volumes:
-      - /home/tomasoni/git/VisualSHIELD/rock/conf:/srv/conf
+      - ./rock/conf:/srv/conf
       
   mongo:
     image: mongo:4.2
