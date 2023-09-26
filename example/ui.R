@@ -5,11 +5,11 @@ library(DSI)
 library(DSOpal)
 library(dsBaseClient)
 #library(dsCOVclient)
-#library(VisualSHIELD)
+library(VisualSHIELD)
 
 #source("../R/client_func.R")
-source("../R/VisualSHIELDUI.R")
-source("../R/VisualSHIELDServer.R")
+#source("../R/VisualSHIELDUI.R")
+#source("../R/VisualSHIELDServer.R")
 
 shinyUI(
   fluidPage(
