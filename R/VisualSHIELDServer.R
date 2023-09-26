@@ -1389,7 +1389,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                   )
                 ),
                 shiny::column(width=1,
-                              customFileInput(ns("input_box_vars"), "", labelIcon = "folder-open-o", 
+                              customFileInput(ns("input_box_vars"), "", labelIcon = "folder-open", 
                                          accept = c("text/csv",
                                                     "text/comma-separated-values,text/plain",
                                                     ".csv"), progress = FALSE)
@@ -1406,7 +1406,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                    multiple=T)
                 ),
                 shiny::column(width=1,
-                              customFileInput(ns("input_knn_vars_x"), "", labelIcon = "folder-open-o", 
+                              customFileInput(ns("input_knn_vars_x"), "", labelIcon = "folder-open", 
                                               accept = c("text/csv",
                                                          "text/comma-separated-values,text/plain",
                                                          ".csv"), progress = FALSE)
@@ -1444,7 +1444,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                                     multiple=T)
                               ),
                 shiny::column(width=1,
-                              customFileInput(ns("input_cca_vars_x"), "", labelIcon = "folder-open-o", 
+                              customFileInput(ns("input_cca_vars_x"), "", labelIcon = "folder-open", 
                                               accept = c("text/csv",
                                                          "text/comma-separated-values,text/plain",
                                                          ".csv"), progress = FALSE)
@@ -1459,7 +1459,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                                                         multiple=T)
                     ),
                     shiny::column(width=1,
-                                  customFileInput(ns("input_cca_vars_y"), "", labelIcon = "folder-open-o", 
+                                  customFileInput(ns("input_cca_vars_y"), "", labelIcon = "folder-open", 
                                                   accept = c("text/csv",
                                                              "text/comma-separated-values,text/plain",
                                                              ".csv"), progress = FALSE)
@@ -1496,7 +1496,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
                               ),
                 ),
                 shiny::column(width=1,
-                              customFileInput(ns("input_rf_vars"), "", labelIcon = "folder-open-o", 
+                              customFileInput(ns("input_rf_vars"), "", labelIcon = "folder-open", 
                                               accept = c("text/csv",
                                                          "text/comma-separated-values,text/plain",
                                                          ".csv"), progress = FALSE)
@@ -1561,7 +1561,7 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
   	                        ),
   	          ),
   	          shiny::column(width=1,
-  	                        customFileInput(ns("input_glm_fs_vars"), "", labelIcon = "folder-open-o", 
+  	                        customFileInput(ns("input_glm_fs_vars"), "", labelIcon = "folder-open", 
   	                                        accept = c("text/csv",
   	                                                   "text/comma-separated-values,text/plain",
   	                                                   ".csv"), progress = FALSE)
