@@ -1,20 +1,18 @@
-# VisualSHIELD
+# Description
 
-VisualSHIELD allows to create reactive visual web UIs to seamlessly analyze multiple remote datasets together,
+The DataSHIELD suite was designed to enable advanced statistical analysis without sharing any individual-level data.
 
+VisualSHIELD is a user-friendly graphical interface built on top of DataSHIELD, that allows to create reactive visual web UIs to seamlessly analyze multiple remote datasets together,
 hosted on [Opal](https://www.obiba.org/pages/products/opal/) through DataSHIELD.
 
 The DASH-IN interactive federated analysis system, is a unifying visual federated analytical framework of observational and interventional studies that was the first incubator for the current VisualSHIELD.
 
 VisualSHIELD development contribuited to the [ENPADASI](https://www.dtls.nl/wp-content/uploads/2016/05/ENPADASI_Bouwman_250516_FAIR.pdf#page=7) project of 51 partners in 9 European countries.
 
-VisualSHIELD is a shiny app module offering ready-to-use self-contained UI and logic to be easily integrated in your custom Shiny App. 
 
-This repository contains the reference implementation for VisualSHIELD. You may freely use this work in your research and activities under the BSD 3-Clause License (see LICENSE file).
+You may freely use this work in your research and activities under the BSD 3-Clause License (see LICENSE file).
 
 For more information and guided hands-on tutorials on how everything can be systematically glued together, see the [usage](#usage) section or get in touch with the [Cosbi Bioinformatics lab](bioinformatics@cosbi.eu). We'll be happy to help!
-
-Further readings: [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) 
 
 ## Table of contents
 
