@@ -14,8 +14,6 @@ This repository contains the reference implementation for VisualSHIELD. You may 
 
 For more information and guided hands-on tutorials on how everything can be systematically glued together, see the [usage](#usage) section or get in touch with the [Cosbi Bioinformatics lab](bioinformatics@cosbi.eu). We'll be happy to help!
 
-Further readings: [ENPADASI Hackaton](https://agenda.infn.it/event/11522/) 
-
 ## Table of contents
 
 - [Installation](#installation)
