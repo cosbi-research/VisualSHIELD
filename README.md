@@ -3,7 +3,6 @@
 The DataSHIELD suite was designed to enable advanced statistical analysis without sharing any individual-level data.
 
 VisualSHIELD is a user-friendly graphical interface built on top of DataSHIELD, that allows to create reactive visual web UIs to seamlessly analyze multiple remote datasets together,
-
 hosted on [Opal](https://www.obiba.org/pages/products/opal/) through DataSHIELD.
 
 The DASH-IN interactive federated analysis system, is a unifying visual federated analytical framework of observational and interventional studies that was the first incubator for the current VisualSHIELD.
