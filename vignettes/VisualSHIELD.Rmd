@@ -119,5 +119,6 @@ The VisualSHIELDServer `servers` parameter should return a list that will contai
     - `url` URL of the opal server, example https://opal-demo.obiba.org
     - `username` the username for the login
     - `password` the password for the login
-    - `private_key` an alphanumeric string that can be used in place of password
+    - `certificate` a path to the certificate file to be used for authentication
+    - `private_key` an alphanumeric string that can be used for authentication
 
