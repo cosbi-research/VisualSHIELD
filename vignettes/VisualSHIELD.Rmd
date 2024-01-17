@@ -19,13 +19,18 @@ knitr::opts_chunk$set(
 VisualSHIELD is a shiny app module.
 A shiny app module is a self-contained UI with it's own logic that can be easily integrated in any other custom shiny app. 
 
-The VisualSHIELD module allows to seamlessly analyze multiple remote datasets in parallel hosted on  [Opal](https://www.obiba.org/pages/products/opal/) and optionally provides also a facility to load [dbNP](https://www.dbnp.org/) data into Opal. 
+The VisualSHIELD module allows to seamlessly analyze multiple remote datasets in parallel hosted on  [Opal](https://www.obiba.org/pages/products/opal/). 
 The analysis is performed through the privacy-aware [DataSHIELD](https://www.datashield.ac.uk/) analysis package, and allows to easily perform:
-* histograms
-* contour plots
-* heatmaps
-* linear models (lm)
-* generalized linear models (glm)
+
+- histograms
+- contour plots
+- heatmaps
+- linear models (lm)
+- generalized linear models (glm)
+- correlation matrix
+- K-nearest neighbors
+- principal component analysis
+- randomForest
 
 VisualSHIELD module is exposed through the VisualSHIELDUI and the VisualSHIELDServer functions. 
 
@@ -83,10 +88,7 @@ shinyServer(function(input, output, session) {
                                              username = "administrator",
                                              password = "password",
                                              certificate = NULL,
-                                             private_key = NULL),
-                          # dbNP server whose studies will be migrated 
-                          # to the opal server defined above
-                          dashin_server = NULL 
+                                             private_key = NULL)
                   )
                   #, ... server n
                 )
@@ -109,12 +111,13 @@ As you can notice, `login` is a reactive block that gets updated every time the 
 This update in turns triggers the update of VisualSHIELDServer `Dataservers` and the module will re-connect to the updated list of servers.
 This demonstrates how you can reactively update VisualSHIELD based on your custom inputs.
 
-The VisualSHIELDServer `servers` parameter should return a list that will contain
-* user name/email of the user performing the actions. This comes handy if you have multiple users for your shiny and you want to track down which user did an operation. If you don't need to associate analysis to user you can put here whatever fixed string you like.
-* a sub-list of `servers` composed of 
-  * `opal_server` a sub-sub-list with the credentials to access the opal server. The parameters are listed in the example above.
-  * `dashin_server` a sub-sub-list with the credentials to access the dbNP server. The parameters are:
-    * `url` example: https://dashin.eu/interventionstudies-test/api/
-    * `username` the username for the login
-    * `password` the password for the login
-    * `skey` an alphanumeric string needed for the API
+The VisualSHIELDServer `servers` parameter should return a list that will contain:
+
+- user name/email of the user performing the actions. This comes handy if you have multiple users for your shiny and you want to track down which user did an operation. If you don't need to associate analysis to user you can put here whatever fixed string you like.
+- a sub-list of `servers` composed of 
+  - `opal_server` a sub-sub-list with the credentials to access the opal server. The parameters are listed in the example above.
+    - `url` URL of the opal server, example https://opal-demo.obiba.org
+    - `username` the username for the login
+    - `password` the password for the login
+    - `private_key` an alphanumeric string that can be used in place of password
+
