@@ -15,6 +15,7 @@ VisualSHIELD development contribuited to the [ENPADASI](https://www.dtls.nl/wp-c
 You may freely use this work in your research and activities under the BSD 3-Clause License (see LICENSE file).
 
 For details, citation and contact information see the paper [ Strengths and limitations of non-disclosive data analysis: a comparison of breast cancer survival classifiers using VisualSHIELD ](https://www.frontiersin.org/articles/10.3389/fgene.2024.1270387)
+
 For more information and guided hands-on tutorials on how everything can be systematically glued together, see the [usage](#usage) section or get in touch with the [Cosbi Bioinformatics lab](bioinformatics@cosbi.eu). We'll be happy to help!
 
 ## Table of contents
