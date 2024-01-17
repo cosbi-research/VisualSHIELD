@@ -16,8 +16,7 @@ shinyServer(function(input, output, session) {
                                              username = "administrator",
                                              password = "password",
                                              certificate = NULL,
-                                             private_key = NULL),
-                          dashin_server = NULL # dbNP server whose studies will be migrated to the opal server defined above
+                                             private_key = NULL)
                   ),
                   # server 2
                   list(
@@ -27,8 +26,7 @@ shinyServer(function(input, output, session) {
                                        username = "administrator",
                                        password = "password",
                                        certificate = NULL,
-                                       private_key = NULL),
-                    dashin_server = NULL # dbNP server whose studies will be migrated to the opal server defined above
+                                       private_key = NULL)
                   )
                   #, ... server n
                 )
