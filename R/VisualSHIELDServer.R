@@ -1003,9 +1003,9 @@ VisualSHIELDServer <- function(id, servers, assume.columns.type=NULL, LOG_FILE="
           logins <- servers[servers$server %in% input$dbnpServer, ]
           ## Specify the Phenotype Database instance
           PhenotypeDatabaseRClient::setPhenotypeDatabaseBaseUrl(login$url)
-          user = "zefoteus"
-          pass = "v;4:xSx9#"
-          skey = "e1fb2eea-fdd2-4be6-afc7-766ed049ed9c"
+          user = "<YOUR USER>"
+          pass = "<YOUR PASS>"
+          skey = "<YOUR KEY>"
           PhenotypeDatabaseRClient::authenticate(login$user, pass, skey)
           
           ## Get available studies
